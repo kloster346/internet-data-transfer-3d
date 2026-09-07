@@ -4,7 +4,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 /** 创建默认透视相机（俯视场景中心） */
 export function createCamera(): THREE.PerspectiveCamera {
   const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 200);
-  camera.position.set(0, 7.5, 19);
+  camera.position.set(0, 6.6, 16.2);
   camera.lookAt(0, 1.2, 0);
   return camera;
 }
@@ -40,7 +40,7 @@ export function createCameraRig(camera: THREE.PerspectiveCamera, domElement: HTM
     reset() {
       controls.autoRotate = false;
       lastInteract = performance.now() / 1000;
-      camera.position.set(0, 7.5, 19);
+      camera.position.set(0, 6.6, 16.2);
       controls.target.set(0, 1.4, 0);
       controls.update();
     },

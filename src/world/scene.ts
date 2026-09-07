@@ -22,13 +22,13 @@ export function setupEnvironment(scene: THREE.Scene): void {
   fill.position.set(-9, 3, 6);
   scene.add(fill);
 
-  const grid = new THREE.GridHelper(40, 40, 0x1b2a4d, 0x0e1830);
+  const grid = new THREE.GridHelper(40, 40, 0x2a3f70, 0x17233f);
   grid.position.y = -0.02;
   scene.add(grid);
 
   const floor = new THREE.Mesh(
     new THREE.PlaneGeometry(40, 40),
-    new THREE.MeshStandardMaterial({ color: 0x0a1120, roughness: 0.95, metalness: 0.1 })
+    new THREE.MeshStandardMaterial({ color: 0x0d1530, roughness: 0.95, metalness: 0.1 })
   );
   floor.rotation.x = -Math.PI / 2;
   floor.receiveShadow = true;

@@ -34,15 +34,15 @@ export function buildLinks(scene: THREE.Scene): Map<string, Link> {
     const curve = new THREE.CatmullRomCurve3([p0, mid, p1], false, 'catmullrom', 0.5);
 
     const tube = new THREE.Mesh(
-      new THREE.TubeGeometry(curve, 60, 0.05, 8, false),
+      new THREE.TubeGeometry(curve, 60, 0.08, 8, false),
       new THREE.MeshStandardMaterial({
-        color: 0x2c3d6b,
+        color: 0x35518f,
         roughness: 0.5,
         metalness: 0.3,
-        emissive: 0x0d1a3a,
-        emissiveIntensity: 0.5,
+        emissive: 0x1b3a75,
+        emissiveIntensity: 0.9,
         transparent: true,
-        opacity: 0.9
+        opacity: 1.0
       })
     );
     scene.add(tube);
@@ -54,9 +54,9 @@ export function buildLinks(scene: THREE.Scene): Map<string, Link> {
       flowGeo,
       new THREE.PointsMaterial({
         color: 0x4cc9f0,
-        size: 0.09,
+        size: 0.13,
         transparent: true,
-        opacity: 0.8,
+        opacity: 0.95,
         blending: THREE.AdditiveBlending,
         depthWrite: false,
         sizeAttenuation: true

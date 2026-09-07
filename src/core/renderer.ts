@@ -45,9 +45,9 @@ export function createRenderers(
   composer.addPass(new RenderPass(scene, camera));
   const bloom = new UnrealBloomPass(
     new THREE.Vector2(window.innerWidth, window.innerHeight),
-    1.1, // strength
-    0.4, // radius
-    0.6  // threshold
+    0.75, // strength
+    0.32, // radius
+    0.85  // threshold
   );
   composer.addPass(bloom);
   composer.addPass(new OutputPass());

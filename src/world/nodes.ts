@@ -28,14 +28,14 @@ export interface Nodes {
 
 /** 各节点的世界坐标（地面 y=0） */
 export const POS: Record<NodeId, [number, number, number]> = {
-  client: [-9, 0, 0],
-  dns: [-5, 0, 4.5],
-  cdn: [-3.5, 0, -4.5],
-  lb: [-1.5, 0, 0],
-  api: [2.5, 0, 0],
-  backend: [6, 0, 0],
-  cache: [8, 0, 2.6],
-  db: [8, 0, -2.6]
+  client: [-7.5, 0, 0],
+  dns: [-4.1, 0, 3.2],
+  cdn: [-2.6, 0, -3.2],
+  lb: [-1.1, 0, 0],
+  api: [2.2, 0, 0],
+  backend: [5.6, 0, 0],
+  cache: [7.4, 0, 2.0],
+  db: [7.4, 0, -2.0]
 };
 
 function steel(color: number): THREE.MeshStandardMaterial {
@@ -56,37 +56,37 @@ function register(id: NodeId, g: THREE.Group, glowMeshes: THREE.Mesh[]): Network
 /** 客户端（浏览器）：显示器 + 屏幕 + 天线 */
 function buildClient(): ClientNode {
   const g = new THREE.Group();
-  const stand = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.8, 0.9, 8), steel(0x3a4a72));
+  const stand = new THREE.Mesh(new THREE.CylinderGeometry(0.55, 0.9, 0.9, 8), steel(0x3a4a72));
   stand.position.y = 0.45;
   stand.castShadow = true;
   g.add(stand);
-  const body = new THREE.Mesh(new THREE.BoxGeometry(2.6, 1.7, 0.24), steel(0x2c3e6b));
-  body.position.y = 1.85;
+  const body = new THREE.Mesh(new THREE.BoxGeometry(3.0, 1.95, 0.26), steel(0x2c3e6b));
+  body.position.y = 1.9;
   body.castShadow = true;
   g.add(body);
   const screen = makeTextTexture('', { width: 512, height: 320 });
-  const screenMesh = new THREE.Mesh(new THREE.PlaneGeometry(2.35, 1.5), new THREE.MeshBasicMaterial({ map: screen.tex }));
-  screenMesh.position.set(0, 1.85, 0.13);
+  const screenMesh = new THREE.Mesh(new THREE.PlaneGeometry(2.75, 1.72), new THREE.MeshBasicMaterial({ map: screen.tex }));
+  screenMesh.position.set(0, 1.9, 0.145);
   g.add(screenMesh);
-  const antenna = glowPart(new THREE.SphereGeometry(0.13, 16, 16), 0x4cc9f0, 1.6);
-  antenna.position.set(0, 2.85, 0);
+  const antenna = glowPart(new THREE.SphereGeometry(0.14, 16, 16), 0x4cc9f0, 1.0);
+  antenna.position.set(0, 3.05, 0);
   g.add(antenna);
   const node = register('client', g, [antenna]);
   return { ...node, screen, screenMesh };
 }
 
-/** DNS 解析器：发光球体 + 环 */
+/** DNS 解析器：发光球体 + 环（球形不大，保持形状可见） */
 function buildDns(): NetworkNode {
   const g = new THREE.Group();
-  const sphere = glowPart(new THREE.SphereGeometry(0.85, 32, 32), 0x4cc9f0, 1.3);
-  sphere.position.y = 1.1;
+  const sphere = glowPart(new THREE.SphereGeometry(0.55, 32, 32), 0x4cc9f0, 0.85);
+  sphere.position.y = 1.05;
   g.add(sphere);
-  const ring = new THREE.Mesh(new THREE.TorusGeometry(1.05, 0.06, 12, 48), steel(0x3a4a72));
-  ring.position.y = 1.1;
+  const ring = new THREE.Mesh(new THREE.TorusGeometry(0.78, 0.05, 12, 48), steel(0x3a4a72));
+  ring.position.y = 1.05;
   ring.rotation.x = Math.PI / 2;
   g.add(ring);
-  const pillar = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.24, 2.2, 10), steel(0x3a4a72));
-  pillar.position.y = 1.1;
+  const pillar = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.2, 2.1, 10), steel(0x3a4a72));
+  pillar.position.y = 1.05;
   pillar.castShadow = true;
   g.add(pillar);
   return register('dns', g, [sphere]);
@@ -95,12 +95,12 @@ function buildDns(): NetworkNode {
 /** CDN 边缘节点：六棱柱 */
 function buildCdn(): NetworkNode {
   const g = new THREE.Group();
-  const prism = glowPart(new THREE.CylinderGeometry(0.95, 0.95, 0.7, 6), 0x06d6a0, 1.3);
-  prism.position.y = 1.1;
+  const prism = glowPart(new THREE.CylinderGeometry(0.72, 0.72, 0.6, 6), 0x06d6a0, 0.85);
+  prism.position.y = 1.05;
   prism.castShadow = true;
   g.add(prism);
-  const pillar = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.24, 2.2, 10), steel(0x3a4a72));
-  pillar.position.y = 1.1;
+  const pillar = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.2, 2.1, 10), steel(0x3a4a72));
+  pillar.position.y = 1.05;
   pillar.castShadow = true;
   g.add(pillar);
   return register('cdn', g, [prism]);
@@ -109,11 +109,11 @@ function buildCdn(): NetworkNode {
 /** 负载均衡器：八面体 */
 function buildLb(): NetworkNode {
   const g = new THREE.Group();
-  const octa = glowPart(new THREE.OctahedronGeometry(0.85, 0), 0xffb703, 1.3);
-  octa.position.y = 1.1;
+  const octa = glowPart(new THREE.OctahedronGeometry(0.68, 0), 0xffb703, 0.85);
+  octa.position.y = 1.05;
   g.add(octa);
-  const pillar = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.24, 2.2, 10), steel(0x3a4a72));
-  pillar.position.y = 1.1;
+  const pillar = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.2, 2.1, 10), steel(0x3a4a72));
+  pillar.position.y = 1.05;
   pillar.castShadow = true;
   g.add(pillar);
   return register('lb', g, [octa]);
@@ -122,11 +122,11 @@ function buildLb(): NetworkNode {
 /** API 网关：发光环 + 二十面体核心 */
 function buildApi(): NetworkNode {
   const g = new THREE.Group();
-  const ring = glowPart(new THREE.TorusGeometry(1.1, 0.14, 20, 60), 0x9d4edd, 1.7);
+  const ring = glowPart(new THREE.TorusGeometry(1.05, 0.11, 20, 60), 0x9d4edd, 1.1);
   ring.position.y = 1.35;
   ring.rotation.x = Math.PI / 2;
   g.add(ring);
-  const core = glowPart(new THREE.IcosahedronGeometry(0.55, 1), 0x9d4edd, 1.7);
+  const core = glowPart(new THREE.IcosahedronGeometry(0.5, 1), 0x9d4edd, 1.25);
   core.position.y = 1.35;
   g.add(core);
   const pillar = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.3, 2.7, 12), steel(0x3a4a72));
@@ -139,17 +139,17 @@ function buildApi(): NetworkNode {
 /** 后端：服务器机柜 + 刀片 + LED 指示灯 */
 function buildBackend(): NetworkNode {
   const g = new THREE.Group();
-  const rack = new THREE.Mesh(new THREE.BoxGeometry(1.7, 2.6, 1.3), steel(0x2a3a5e));
+  const rack = new THREE.Mesh(new THREE.BoxGeometry(1.7, 2.6, 1.3), steel(0x33476f));
   rack.position.y = 1.3;
   rack.castShadow = true;
   g.add(rack);
   const leds: THREE.Mesh[] = [];
   for (let i = 0; i < 3; i++) {
-    const b = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.6, 1.1), steel(0x33476e));
+    const b = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.6, 1.1), steel(0x3d5380));
     b.position.set(0, 0.85 + i * 0.8, 0);
     b.castShadow = true;
     g.add(b);
-    const led = glowPart(new THREE.SphereGeometry(0.06, 12, 12), 0x2ecc71, 1.4);
+    const led = glowPart(new THREE.SphereGeometry(0.06, 12, 12), 0x2ecc71, 0.9);
     led.position.set(0.62, 0.85 + i * 0.8, 0.56);
     g.add(led);
     leds.push(led);
@@ -160,12 +160,12 @@ function buildBackend(): NetworkNode {
 /** 缓存（Redis 类）：发光立方体 */
 function buildCache(): NetworkNode {
   const g = new THREE.Group();
-  const cube = glowPart(new THREE.BoxGeometry(0.9, 0.9, 0.9), 0xf72585, 1.3);
-  cube.position.y = 1.1;
+  const cube = glowPart(new THREE.BoxGeometry(0.66, 0.66, 0.66), 0xf72585, 0.9);
+  cube.position.y = 1.05;
   cube.castShadow = true;
   g.add(cube);
-  const pillar = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.24, 2.2, 10), steel(0x3a4a72));
-  pillar.position.y = 1.1;
+  const pillar = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.2, 2.1, 10), steel(0x3a4a72));
+  pillar.position.y = 1.05;
   pillar.castShadow = true;
   g.add(pillar);
   return register('cache', g, [cube]);
@@ -174,12 +174,12 @@ function buildCache(): NetworkNode {
 /** 数据库：圆柱（数据库图标） */
 function buildDb(): NetworkNode {
   const g = new THREE.Group();
-  const cyl = glowPart(new THREE.CylinderGeometry(0.85, 0.85, 1.2, 24), 0x2ecc71, 1.2);
-  cyl.position.y = 1.1;
+  const cyl = glowPart(new THREE.CylinderGeometry(0.72, 0.72, 1.1, 24), 0x2ecc71, 0.85);
+  cyl.position.y = 1.05;
   cyl.castShadow = true;
   g.add(cyl);
-  const top = new THREE.Mesh(new THREE.CylinderGeometry(0.9, 0.9, 0.18, 24), steel(0x2a3a5e));
-  top.position.y = 1.75;
+  const top = new THREE.Mesh(new THREE.CylinderGeometry(0.78, 0.78, 0.16, 24), steel(0x2a3a5e));
+  top.position.y = 1.68;
   g.add(top);
   return register('db', g, [cyl]);
 }
@@ -202,14 +202,14 @@ export function buildAllNodes(): Nodes {
 /** 为节点添加 CSS2D 文字标签 */
 export function addNodeLabels(scene: THREE.Scene): void {
   const defs: [NodeId, string, [number, number, number]][] = [
-    ['client', '前端（浏览器）', [-9, 3.5, 0]],
-    ['dns', 'DNS 解析器', [-5, 2.6, 4.5]],
-    ['cdn', 'CDN 边缘', [-3.5, 2.6, -4.5]],
-    ['lb', '负载均衡', [-1.5, 2.6, 0]],
-    ['api', 'API 网关', [2.5, 2.9, 0]],
-    ['backend', '后端（服务器）', [6, 3.4, 0]],
-    ['cache', '缓存', [8, 2.4, 2.6]],
-    ['db', '数据库', [8, 2.4, -2.6]]
+    ['client', '前端（浏览器）', [-7.5, 3.8, 0]],
+    ['dns', 'DNS 解析器', [-4.1, 2.7, 3.2]],
+    ['cdn', 'CDN 边缘', [-2.6, 2.7, -3.2]],
+    ['lb', '负载均衡', [-1.1, 2.6, 0]],
+    ['api', 'API 网关', [2.2, 2.9, 0]],
+    ['backend', '后端（服务器）', [5.6, 3.4, 0]],
+    ['cache', '缓存', [7.4, 2.4, 2.0]],
+    ['db', '数据库', [7.4, 2.4, -2.0]]
   ];
   for (const [id, text, p] of defs) {
     const l = label(text, 'small');

@@ -41,14 +41,14 @@ function shapeFor(kind: PacketKind): THREE.BufferGeometry {
 /** 数据包：按类型取形状，主体发光 + 尾迹光球 + CSS2D 标签 */
 export function buildPacket(spec: PacketSpec): Packet {
   const g = new THREE.Group();
-  const mesh = new THREE.Mesh(shapeFor(spec.kind), glow(spec.color, 2.2));
+  const mesh = new THREE.Mesh(shapeFor(spec.kind), glow(spec.color, 1.4));
   g.add(mesh);
   const trail = new THREE.Mesh(
-    new THREE.SphereGeometry(0.16, 10, 10),
+    new THREE.SphereGeometry(0.2, 10, 10),
     new THREE.MeshBasicMaterial({
       color: spec.color,
       transparent: true,
-      opacity: 0.4,
+      opacity: 0.5,
       blending: THREE.AdditiveBlending,
       depthWrite: false
     })
