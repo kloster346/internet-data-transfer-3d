@@ -1,4 +1,4 @@
-import { REQUEST_TEXT, STEPS, USER_JSON } from '../data/scenarios';
+import { REQUEST_TEXT, SCENARIO, USER_JSON } from '../data/scenarios';
 
 /** JSON 语法高亮：键名/字符串/数字/布尔/null 分别着色 */
 function jsonToHtml(obj: unknown): string {
@@ -52,25 +52,26 @@ export function createHud(): Hud {
   const jsonCodeEl = document.getElementById('jsonCode')!;
   const btnPlay = document.getElementById('btnPlay') as HTMLButtonElement;
 
-  STEPS.forEach((s, i) => {
+  const steps = SCENARIO.steps;
+  steps.forEach((s, i) => {
     const div = document.createElement('div');
     div.className = 'step';
     div.innerHTML =
-      '<span class="idx">' + (i + 1) + '</span><span>' + s.title.replace(/^[①②③④⑤⑥⑦] /, '') + '</span>';
+      '<span class="idx">' + (i + 1) + '</span><span>' + s.title.replace(/^[①②③④⑤⑥⑦⑧⑨⑩⑪⑫⑬⑭]\s*/, '') + '</span>';
     stepListEl.appendChild(div);
   });
   const stepDoms = stepListEl.children;
 
   function setStep(i: number): void {
-    const s = STEPS[i];
+    const s = steps[i];
     stepTitleEl.textContent = s.title;
     stepDescEl.textContent = s.desc;
     for (let k = 0; k < stepDoms.length; k++) {
       stepDoms[k].classList.toggle('active', k === i);
       stepDoms[k].classList.toggle('done', k < i);
     }
-    if (s.json === 'json') jsonCodeEl.innerHTML = jsonToHtml(USER_JSON);
-    else if (s.json === 'req') jsonCodeEl.innerHTML = requestHtml();
+    if (s.ui?.json === 'json') jsonCodeEl.innerHTML = jsonToHtml(USER_JSON);
+    else if (s.ui?.json === 'req') jsonCodeEl.innerHTML = requestHtml();
     else jsonCodeEl.innerHTML = '<span class="req-head">… 等待数据 …</span>';
   }
 

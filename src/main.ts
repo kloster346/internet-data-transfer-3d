@@ -3,11 +3,12 @@ import './style.css';
 import { createRenderers } from './core/renderer';
 import { createCamera, createCameraRig } from './core/camera';
 import { setupEnvironment } from './world/scene';
-import { buildFrontend, buildBackend, buildApi, addNodeLabels } from './world/nodes';
-import { buildDataPath } from './world/links';
-import { buildPacket, buildJsonDoc } from './world/packets';
+import { buildAllNodes, addNodeLabels } from './world/nodes';
+import { buildLinks } from './world/links';
+import { buildPacket, buildJsonDoc, type Packet } from './world/packets';
 import { createEngine } from './core/engine';
 import { createHud } from './ui/hud';
+import { SCENARIO } from './data/scenarios';
 
 const container = document.getElementById('app')!;
 
@@ -22,28 +23,32 @@ const { controls } = cameraRig;
 
 setupEnvironment(scene);
 
-// 构建世界：三个节点 + 标签 + 数据路径 + 数据包 + JSON 文档
-const frontend = buildFrontend();
-scene.add(frontend.group);
-const backend = buildBackend();
-scene.add(backend.group);
-const api = buildApi();
-scene.add(api.group);
+// 构建 8 节点拓扑 + 链路 + 数据包池 + JSON 文档
+const nodes = buildAllNodes();
+for (const n of nodes.list.values()) scene.add(n.group);
 addNodeLabels(scene);
 
-const path = buildDataPath(scene);
+const links = buildLinks(scene);
 
-const requestPacket = buildPacket(0x4cc9f0, '请求 Request', 'small');
-scene.add(requestPacket.group);
-const responsePacket = buildPacket(0x2ecc71, '响应 JSON', 'json-label');
-scene.add(responsePacket.group);
+const packets = new Map<string, Packet>();
+for (const step of SCENARIO.steps) {
+  for (const sp of step.packets) {
+    const key = sp.spec.kind + ':' + sp.spec.link;
+    if (!packets.has(key)) {
+      const pkt = buildPacket(sp.spec);
+      scene.add(pkt.group);
+      packets.set(key, pkt);
+    }
+  }
+}
+
 const jsonDoc = buildJsonDoc();
 scene.add(jsonDoc);
 
 // 装配 HUD 与引擎
 const hud = createHud();
 const engine = createEngine(
-  { scene, camera, frontend, backend, api, path, requestPacket, responsePacket, jsonDoc },
+  { scene, camera, nodes, links, packets, jsonDoc, scenario: SCENARIO },
   hud
 );
 hud.bind({
