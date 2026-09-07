@@ -1,7 +1,13 @@
 import * as THREE from 'three';
 import { clamp01, mapRange } from '../world/materials';
 import { drawScreen, type Nodes, type ScreenTexture } from '../world/nodes';
-import type { Link } from '../world/links';
+import {
+  LINK_BASE_OPACITY,
+  LINK_BASE_EMISSIVE,
+  LINK_ACTIVE_OPACITY,
+  LINK_ACTIVE_EMISSIVE,
+  type Link
+} from '../world/links';
 import { packetKey, updateTrail, resetTrail, type Packet } from '../world/packets';
 import { ShockwavePool } from '../world/effects';
 import type { NodeId, Scenario, ScreenState } from '../data/types';
@@ -199,17 +205,17 @@ export function createEngine(refs: WorldRefs, ui: EngineUi): Engine {
       jsonDoc.scale.setScalar(index === steps.findIndex((s) => s.ui?.json === 'json') ? mapRange(progress, 0, 1, 0.3, 1) : 1);
     }
 
-    // 链路流动粒子
+    // 链路点亮：数据包在链路上飞行时提高 glow，其余保持极淡
+    const activeLinks = new Set<string>();
+    for (const sp of step.packets) {
+      const within = progress >= sp.t0 - 1e-4 && progress <= sp.t1 + 1e-4;
+      if (within) activeLinks.add(sp.spec.link);
+    }
     for (const link of links.values()) {
-      const arr = (link.flowGeo.attributes.position as THREE.BufferAttribute).array as Float32Array;
-      for (let i = 0; i < link.flowPts; i++) {
-        const u = (i / link.flowPts + now * 0.04) % 1;
-        const pp = link.curve.getPointAt(u);
-        arr[i * 3] = pp.x;
-        arr[i * 3 + 1] = pp.y;
-        arr[i * 3 + 2] = pp.z;
-      }
-      (link.flowGeo.attributes.position as THREE.BufferAttribute).needsUpdate = true;
+      const target = activeLinks.has(link.id) ? 1 : 0;
+      link.glow += (target - link.glow) * (1 - Math.exp(-dt * 6));
+      link.mat.opacity = LINK_BASE_OPACITY + (LINK_ACTIVE_OPACITY - LINK_BASE_OPACITY) * link.glow;
+      link.mat.emissiveIntensity = LINK_BASE_EMISSIVE + (LINK_ACTIVE_EMISSIVE - LINK_BASE_EMISSIVE) * link.glow;
     }
   }
 
