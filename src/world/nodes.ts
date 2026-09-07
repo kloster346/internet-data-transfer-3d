@@ -30,12 +30,12 @@ export interface Nodes {
 
 /** 各节点的世界坐标（地面 y=0）——前中后纵深 + 左右对称布局 */
 export const POS: Record<NodeId, [number, number, number]> = {
-  client: [0, 0, 7.2],
+  client: [0, 0, 6.0],
   dns: [-5.2, 0, 3.0],
   cdn: [5.2, 0, 3.0],
-  lb: [0, 0, 1.2],
+  lb: [0, 0, 1.0],
   api: [0, 0, -2.2],
-  backend: [0, 0, -5.5],
+  backend: [0, 0, -5.4],
   cache: [-3.8, 0, -4.8],
   db: [3.8, 0, -4.8]
 };
@@ -63,28 +63,28 @@ function register(
 /** 客户端（浏览器）：显示器（带边框）+ 支架 + 键盘底座 + 天线 + 底部氛围光条 */
 function buildClient(): ClientNode {
   const g = new THREE.Group();
-  const stand = new THREE.Mesh(new THREE.CylinderGeometry(0.55, 0.9, 0.9, 8), steel(0x3a4a72));
-  stand.position.y = 0.45;
+  const stand = new THREE.Mesh(new THREE.CylinderGeometry(0.45, 0.78, 0.85, 8), steel(0x3a4a72));
+  stand.position.y = 0.42;
   stand.castShadow = true;
   g.add(stand);
 
-  // 显示器外壳 + 屏幕
-  const body = new THREE.Mesh(new THREE.BoxGeometry(3.0, 1.95, 0.26), steel(0x2c3e6b));
-  body.position.y = 1.9;
+  // 显示器外壳 + 屏幕（适度缩小，避免遮挡后景）
+  const body = new THREE.Mesh(new THREE.BoxGeometry(2.45, 1.6, 0.24), steel(0x2c3e6b));
+  body.position.y = 1.65;
   body.castShadow = true;
   g.add(body);
   const screen = makeTextTexture('', { width: 512, height: 320 });
-  const screenMesh = new THREE.Mesh(new THREE.PlaneGeometry(2.75, 1.72), new THREE.MeshBasicMaterial({ map: screen.tex }));
-  screenMesh.position.set(0, 1.9, 0.145);
+  const screenMesh = new THREE.Mesh(new THREE.PlaneGeometry(2.25, 1.42), new THREE.MeshBasicMaterial({ map: screen.tex }));
+  screenMesh.position.set(0, 1.65, 0.135);
   g.add(screenMesh);
 
   // 底部氛围光条（发光）
-  const glowBar = glowPart(new THREE.BoxGeometry(2.2, 0.05, 0.03), 0x4cc9f0, 0.9);
-  glowBar.position.set(0, 0.86, 0.16);
+  const glowBar = glowPart(new THREE.BoxGeometry(1.9, 0.05, 0.03), 0x4cc9f0, 0.9);
+  glowBar.position.set(0, 0.82, 0.15);
   g.add(glowBar);
 
-  const antenna = glowPart(new THREE.SphereGeometry(0.14, 16, 16), 0x4cc9f0, 1.0);
-  antenna.position.set(0, 3.05, 0);
+  const antenna = glowPart(new THREE.SphereGeometry(0.13, 16, 16), 0x4cc9f0, 1.0);
+  antenna.position.set(0, 2.62, 0);
   g.add(antenna);
 
   const node = register('client', g, [antenna, glowBar], []);
@@ -270,7 +270,7 @@ export function buildAllNodes(): Nodes {
 /** 为节点添加 CSS2D 文字标签 */
 export function addNodeLabels(scene: THREE.Scene): void {
   const defs: [NodeId, string, [number, number, number]][] = [
-    ['client', '前端（浏览器）', [0, 3.9, 7.2]],
+    ['client', '前端（浏览器）', [0, 3.4, 6.0]],
     ['dns', 'DNS 解析器', [-5.2, 2.6, 3.0]],
     ['cdn', 'CDN 边缘', [5.2, 2.6, 3.0]],
     ['lb', '负载均衡', [0, 2.6, 1.2]],

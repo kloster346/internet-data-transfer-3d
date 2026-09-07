@@ -3,8 +3,8 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
 export function createCamera(): THREE.PerspectiveCamera {
   const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 200);
-  camera.position.set(0, 6.6, 16.2);
-  camera.lookAt(0, 1.6, 0);
+  camera.position.set(0, 7.8, 17.8);
+  camera.lookAt(0, 1.4, 0);
   return camera;
 }
 
@@ -19,8 +19,8 @@ export interface CameraRig {
 const INTRO_DURATION = 2.4;
 const INTRO_START = new THREE.Vector3(15, 19, 27);
 const INTRO_TARGET = new THREE.Vector3(0, 4, 0);
-const INTRO_END = new THREE.Vector3(0, 6.6, 16.2);
-const FINAL_TARGET = new THREE.Vector3(0, 1.6, 0);
+const INTRO_END = new THREE.Vector3(0, 7.8, 17.8);
+const FINAL_TARGET = new THREE.Vector3(0, 1.4, 0);
 
 function easeOutCubic(t: number): number {
   return 1 - Math.pow(1 - t, 3);
