@@ -41,6 +41,40 @@ export function setupEnvironment(scene: THREE.Scene): void {
   }
   stars.setAttribute('position', new THREE.Float32BufferAttribute(starPos, 3));
   scene.add(
-    new THREE.Points(stars, new THREE.PointsMaterial({ color: 0x4cc9f0, size: 0.06, transparent: true, opacity: 0.7 }))
+    new THREE.Points(
+      stars,
+      new THREE.PointsMaterial({
+        color: 0x4cc9f0,
+        size: 0.06,
+        transparent: true,
+        opacity: 0.7,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false
+      })
+    )
+  );
+
+  // 环境尘埃：漂浮的微光粒子，增加氛围
+  const dust = new THREE.BufferGeometry();
+  const dustPos = new Float32Array(360 * 3);
+  for (let i = 0; i < 360; i++) {
+    dustPos[i * 3] = (Math.random() - 0.5) * 40;
+    dustPos[i * 3 + 1] = Math.random() * 12 + 0.5;
+    dustPos[i * 3 + 2] = (Math.random() - 0.5) * 24;
+  }
+  dust.setAttribute('position', new THREE.BufferAttribute(dustPos, 3));
+  scene.add(
+    new THREE.Points(
+      dust,
+      new THREE.PointsMaterial({
+        color: 0x6f8fc0,
+        size: 0.045,
+        transparent: true,
+        opacity: 0.5,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+        sizeAttenuation: true
+      })
+    )
   );
 }

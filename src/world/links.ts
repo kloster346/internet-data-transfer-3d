@@ -45,7 +45,15 @@ export function buildDataPath(scene: THREE.Scene): DataPath {
   flowGeo.setAttribute('position', new THREE.BufferAttribute(flowPos, 3));
   const flow = new THREE.Points(
     flowGeo,
-    new THREE.PointsMaterial({ color: 0x4cc9f0, size: 0.12, transparent: true, opacity: 0.9 })
+    new THREE.PointsMaterial({
+      color: 0x4cc9f0,
+      size: 0.12,
+      transparent: true,
+      opacity: 0.9,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+      sizeAttenuation: true
+    })
   );
   scene.add(flow);
 

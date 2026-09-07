@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import './style.css';
-import { createRenderers, resize } from './core/renderer';
-import { createCameraRig } from './core/camera';
+import { createRenderers } from './core/renderer';
+import { createCamera, createCameraRig } from './core/camera';
 import { setupEnvironment } from './world/scene';
 import { buildFrontend, buildBackend, buildApi, addNodeLabels } from './world/nodes';
 import { buildDataPath } from './world/links';
@@ -15,8 +15,10 @@ const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x070b16);
 scene.fog = new THREE.Fog(0x070b16, 26, 70);
 
-const { renderer, labelRenderer } = createRenderers(container);
-const { camera, controls, reset } = createCameraRig(renderer.domElement);
+const camera = createCamera();
+const renderers = createRenderers(container, scene, camera);
+const cameraRig = createCameraRig(camera, renderers.renderer.domElement);
+const { controls } = cameraRig;
 
 setupEnvironment(scene);
 
@@ -48,19 +50,35 @@ hud.bind({
   toggle: () => engine.toggle(),
   next: () => engine.next(),
   prev: () => engine.prev(),
-  reset: () => reset(),
+  reset: () => cameraRig.reset(),
   setSpeed: (v) => engine.setSpeed(v)
 });
 
 hud.setStep(0);
 
+// 后期特效开关（低端设备可关闭 Bloom）
+const btnFx = document.getElementById('btnFx') as HTMLButtonElement;
+let fxOn = true;
+btnFx.addEventListener('click', () => {
+  fxOn = !fxOn;
+  renderers.setEffects(fxOn);
+  btnFx.textContent = fxOn ? '✨ 特效：开' : '✨ 特效：关';
+  btnFx.classList.toggle('primary', fxOn);
+});
+
 function animate(): void {
   requestAnimationFrame(animate);
+  const now = performance.now() / 1000;
   engine.frame();
+  cameraRig.update(now);
   controls.update();
-  renderer.render(scene, camera);
-  labelRenderer.render(scene, camera);
+  renderers.render(scene, camera);
+  renderers.labelRenderer.render(scene, camera);
 }
 animate();
 
-window.addEventListener('resize', () => resize({ renderer, labelRenderer }, camera));
+window.addEventListener('resize', () => {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderers.setSize(window.innerWidth, window.innerHeight);
+});

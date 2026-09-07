@@ -1,18 +1,24 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
-export interface CameraRig {
-  camera: THREE.PerspectiveCamera;
-  controls: OrbitControls;
-  reset(): void;
-}
-
-/** 创建透视相机与 OrbitControls 轨道控制，并提供重置视角方法 */
-export function createCameraRig(domElement: HTMLElement): CameraRig {
+/** 创建默认透视相机（俯视场景中心） */
+export function createCamera(): THREE.PerspectiveCamera {
   const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 200);
   camera.position.set(0, 7.5, 19);
   camera.lookAt(0, 1.2, 0);
+  return camera;
+}
 
+export interface CameraRig {
+  controls: OrbitControls;
+  reset(): void;
+  /** 每帧调用：在用户空闲若干秒后开启自动旋转，手动拖动即接管 */
+  update(now: number): void;
+}
+
+const IDLE_SECONDS = 4;
+
+export function createCameraRig(camera: THREE.PerspectiveCamera, domElement: HTMLElement): CameraRig {
   const controls = new OrbitControls(camera, domElement);
   controls.target.set(0, 1.4, 0);
   controls.enableDamping = true;
@@ -20,15 +26,28 @@ export function createCameraRig(domElement: HTMLElement): CameraRig {
   controls.minDistance = 8;
   controls.maxDistance = 34;
   controls.maxPolarAngle = Math.PI * 0.52;
+  controls.autoRotateSpeed = 0.6;
   controls.update();
 
+  let lastInteract = performance.now() / 1000;
+  controls.addEventListener('start', () => {
+    controls.autoRotate = false;
+    lastInteract = performance.now() / 1000;
+  });
+
   return {
-    camera,
     controls,
     reset() {
+      controls.autoRotate = false;
+      lastInteract = performance.now() / 1000;
       camera.position.set(0, 7.5, 19);
       controls.target.set(0, 1.4, 0);
       controls.update();
+    },
+    update(now) {
+      if (!controls.autoRotate && now - lastInteract > IDLE_SECONDS) {
+        controls.autoRotate = true;
+      }
     }
   };
 }

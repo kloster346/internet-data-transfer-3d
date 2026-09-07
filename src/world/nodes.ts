@@ -94,12 +94,12 @@ export function buildBackend(): BackendNode {
 /** API 网关（中枢）：发光环 + 二十面体核心 + 支柱 */
 export function buildApi(): ApiNode {
   const g = new THREE.Group();
-  const ring = new THREE.Mesh(new THREE.TorusGeometry(1.1, 0.14, 20, 60), glow(0x9d4edd, 1.4));
+  const ring = new THREE.Mesh(new THREE.TorusGeometry(1.1, 0.14, 20, 60), glow(0x9d4edd, 1.7));
   ring.position.y = 1.35;
   ring.rotation.x = Math.PI / 2;
   g.add(ring);
 
-  const core = new THREE.Mesh(new THREE.IcosahedronGeometry(0.55, 1), glow(0x9d4edd, 1.1));
+  const core = new THREE.Mesh(new THREE.IcosahedronGeometry(0.55, 1), glow(0x9d4edd, 1.7));
   core.position.y = 1.35;
   g.add(core);
 

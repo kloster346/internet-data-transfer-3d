@@ -10,11 +10,17 @@ export interface Packet {
 /** 数据包：八面体主体 + 尾迹光球 + CSS2D 标签 */
 export function buildPacket(color: number, text: string, cls: string): Packet {
   const g = new THREE.Group();
-  const mesh = new THREE.Mesh(new THREE.OctahedronGeometry(0.34, 0), glow(color, 1.6));
+  const mesh = new THREE.Mesh(new THREE.OctahedronGeometry(0.34, 0), glow(color, 2.2));
   g.add(mesh);
   const trail = new THREE.Mesh(
     new THREE.SphereGeometry(0.18, 10, 10),
-    new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.45 })
+    new THREE.MeshBasicMaterial({
+      color,
+      transparent: true,
+      opacity: 0.45,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false
+    })
   );
   g.add(trail);
   const l = label(text, cls);
