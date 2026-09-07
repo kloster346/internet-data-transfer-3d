@@ -1,0 +1,712 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>互联网数据传输 · 3D 教学动画（前端 / 后端 / API / JSON）</title>
+<style>
+  :root {
+    --bg: #070b16;
+    --panel: rgba(15, 22, 42, 0.86);
+    --border: rgba(120, 160, 255, 0.18);
+    --text: #e8eefc;
+    --muted: #93a3c4;
+    --cyan: #4cc9f0;
+    --blue: #4361ee;
+    --green: #2ecc71;
+    --pink: #f72585;
+    --purple: #9d4edd;
+    --amber: #ffb703;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0; height: 100%;
+    background: var(--bg); color: var(--text);
+    font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+    overflow: hidden;
+  }
+  #app { position: fixed; inset: 0; }
+  #app canvas { display: block; }
+
+  /* ---------- 顶部标题 ---------- */
+  #title {
+    position: fixed; top: 14px; left: 16px; z-index: 10;
+    pointer-events: none;
+  }
+  #title h1 {
+    margin: 0; font-size: 20px; letter-spacing: 0.5px; font-weight: 650;
+  }
+  #title h1 .accent { color: var(--cyan); }
+  #title .sub { margin-top: 4px; font-size: 12px; color: var(--muted); }
+
+  /* ---------- 左侧步骤面板 ---------- */
+  #steps {
+    position: fixed; left: 16px; bottom: 16px; z-index: 10;
+    width: 340px; max-width: calc(100vw - 32px);
+    background: var(--panel); border: 1px solid var(--border);
+    border-radius: 14px; padding: 14px 16px;
+    backdrop-filter: blur(10px);
+  }
+  #steps .list { display: flex; flex-direction: column; gap: 4px; margin-bottom: 10px; }
+  #steps .step {
+    display: flex; align-items: baseline; gap: 8px;
+    font-size: 12.5px; color: var(--muted);
+    padding: 3px 6px; border-radius: 6px; transition: all .25s;
+  }
+  #steps .step .idx {
+    flex: 0 0 18px; height: 18px; line-height: 18px; text-align: center;
+    border-radius: 50%; font-size: 10.5px; background: rgba(255,255,255,0.06);
+    color: var(--muted);
+  }
+  #steps .step.active { background: rgba(76, 201, 240, 0.10); color: var(--text); }
+  #steps .step.active .idx { background: var(--cyan); color: #04222e; font-weight: 700; }
+  #steps .step.done { color: var(--muted); }
+  #steps .detail { border-top: 1px solid var(--border); padding-top: 10px; }
+  #steps .detail h2 { margin: 0 0 4px; font-size: 14px; color: var(--cyan); }
+  #steps .detail p { margin: 0; font-size: 12.5px; line-height: 1.55; color: var(--text); }
+
+  /* ---------- 右侧 JSON 面板 ---------- */
+  #json {
+    position: fixed; right: 16px; top: 16px; z-index: 10;
+    width: 340px; max-width: calc(100vw - 32px);
+    background: var(--panel); border: 1px solid var(--border);
+    border-radius: 14px; padding: 14px 16px;
+    backdrop-filter: blur(10px);
+  }
+  #json h2 {
+    margin: 0 0 6px; font-size: 13px; color: var(--green);
+    display: flex; align-items: center; gap: 8px;
+  }
+  #json .tag {
+    font-size: 10px; padding: 1px 6px; border-radius: 4px;
+    background: rgba(46, 204, 113, 0.15); color: var(--green); font-weight: 600;
+  }
+  #json pre {
+    margin: 0; font-size: 12px; line-height: 1.5;
+    font-family: "Cascadia Code", "JetBrains Mono", Consolas, monospace;
+    background: rgba(0,0,0,0.28); border: 1px solid var(--border);
+    border-radius: 8px; padding: 10px 12px; overflow: auto; max-height: 220px;
+    color: #dfe7f7; white-space: pre;
+  }
+  #json .legend { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 6px; }
+  #json .legend span { font-size: 10.5px; color: var(--muted); }
+  .j-key { color: #7cc7ff; }
+  .j-str { color: #9ce8b0; }
+  .j-num { color: #ffb703; }
+  .j-bool { color: #ff7ad9; }
+  .j-null { color: #ff6b6b; }
+  .req-method { color: #4cc9f0; font-weight: 700; }
+  .req-path { color: #9ce8b0; }
+  .req-head { color: #93a3c4; }
+
+  /* ---------- 底部控制 ---------- */
+  #controls {
+    position: fixed; right: 16px; bottom: 16px; z-index: 10;
+    display: flex; align-items: center; gap: 8px;
+    background: var(--panel); border: 1px solid var(--border);
+    border-radius: 12px; padding: 8px 12px; backdrop-filter: blur(10px);
+  }
+  #controls button {
+    border: 1px solid var(--border); background: rgba(255,255,255,0.05);
+    color: var(--text); border-radius: 8px; cursor: pointer;
+    padding: 7px 11px; font-size: 12px; transition: all .15s;
+  }
+  #controls button:hover { background: rgba(255,255,255,0.12); }
+  #controls button.primary { background: var(--cyan); color: #04222e; border-color: var(--cyan); font-weight: 700; }
+  #controls label { font-size: 11px; color: var(--muted); display: flex; align-items: center; gap: 6px; }
+  #controls input[type="range"] { width: 90px; accent-color: var(--cyan); }
+
+  #hint {
+    position: fixed; bottom: 6px; left: 50%; transform: translateX(-50%);
+    z-index: 10; font-size: 11px; color: var(--muted); pointer-events: none;
+    opacity: 0.7;
+  }
+
+  /* ---------- 3D 标签（CSS2D）---------- */
+  .label3d {
+    color: #fff; font-size: 13px; font-weight: 600; white-space: nowrap;
+    text-shadow: 0 1px 6px rgba(0,0,0,0.9); pointer-events: none;
+    transform: translate(-50%, -50%);
+  }
+  .label3d.small { font-size: 11px; font-weight: 500; color: #cfe0ff; }
+  .label3d.json-label { color: #9ce8b0; }
+
+  @media (max-width: 760px) {
+    #json { display: none; }
+    #steps { width: 100%; left: 0; bottom: 0; border-radius: 14px 14px 0 0; }
+  }
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<div id="title">
+  <h1>互联网数据传输 <span class="accent">· 3D 教学动画</span></h1>
+  <div class="sub">前端（浏览器） ⇄ API ⇄ 后端（服务器） · JSON 数据格式</div>
+</div>
+
+<div id="steps">
+  <div class="list" id="stepList"></div>
+  <div class="detail">
+    <h2 id="stepTitle"></h2>
+    <p id="stepDesc"></p>
+  </div>
+</div>
+
+<div id="json">
+  <h2>JSON 响应数据 <span class="tag">application/json</span></h2>
+  <pre id="jsonCode"></pre>
+  <div class="legend">
+    <span><b class="j-key">"键"</b> 键名</span>
+    <span><b class="j-str">"字符串"</b></span>
+    <span><b class="j-num">数字</b></span>
+    <span><b class="j-bool">布尔</b></span>
+    <span><b class="j-null">null</b></span>
+    <span>{} 对象 · [] 数组</span>
+  </div>
+</div>
+
+<div id="controls">
+  <button id="btnPlay" class="primary" title="播放 / 暂停">⏸ 暂停</button>
+  <button id="btnPrev" title="上一步">‹</button>
+  <button id="btnNext" title="下一步">›</button>
+  <button id="btnReset" title="重置视角">⌖ 视角</button>
+  <label>速度 <input id="speed" type="range" min="0.2" max="3" step="0.1" value="1" /></label>
+</div>
+
+<div id="hint">🖱 拖拽旋转 · 滚轮缩放 · 右键平移</div>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "./vendor/three.module.js",
+    "three/addons/controls/OrbitControls.js": "./vendor/OrbitControls.js",
+    "three/addons/renderers/CSS2DRenderer.js": "./vendor/CSS2DRenderer.js"
+  }
+}
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
+
+/* ================= 基础场景 ================= */
+const container = document.getElementById('app');
+
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+container.appendChild(renderer.domElement);
+
+const labelRenderer = new CSS2DRenderer();
+labelRenderer.setSize(window.innerWidth, window.innerHeight);
+labelRenderer.domElement.style.position = 'absolute';
+labelRenderer.domElement.style.top = '0';
+labelRenderer.domElement.style.pointerEvents = 'none';
+container.appendChild(labelRenderer.domElement);
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x070b16);
+scene.fog = new THREE.Fog(0x070b16, 26, 70);
+
+const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 200);
+camera.position.set(0, 7.5, 19);
+camera.lookAt(0, 1.2, 0);
+
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.target.set(0, 1.4, 0);
+controls.enableDamping = true;
+controls.dampingFactor = 0.08;
+controls.minDistance = 8;
+controls.maxDistance = 34;
+controls.maxPolarAngle = Math.PI * 0.52;
+controls.update();
+
+/* ================= 灯光 ================= */
+scene.add(new THREE.AmbientLight(0x8899cc, 1.15));
+const sun = new THREE.DirectionalLight(0xffffff, 2.2);
+sun.position.set(8, 14, 8);
+sun.castShadow = true;
+sun.shadow.mapSize.set(2048, 2048);
+sun.shadow.camera.left = -22; sun.shadow.camera.right = 22;
+sun.shadow.camera.top = 22; sun.shadow.camera.bottom = -22;
+scene.add(sun);
+scene.add(new THREE.PointLight(0x4cc9f0, 30, 40, 2).translateX(0));
+const fill = new THREE.PointLight(0xf72585, 14, 30, 2); fill.position.set(-9, 3, 6); scene.add(fill);
+
+/* ================= 地面与背景 ================= */
+const grid = new THREE.GridHelper(40, 40, 0x1b2a4d, 0x0e1830);
+grid.position.y = -0.02;
+scene.add(grid);
+const floor = new THREE.Mesh(
+  new THREE.PlaneGeometry(40, 40),
+  new THREE.MeshStandardMaterial({ color: 0x0a1120, roughness: 0.95, metalness: 0.1 })
+);
+floor.rotation.x = -Math.PI / 2;
+floor.receiveShadow = true;
+scene.add(floor);
+
+// 背景星点（互联网氛围）
+const stars = new THREE.BufferGeometry();
+const starPos = [];
+for (let i = 0; i < 240; i++) {
+  starPos.push((Math.random() - 0.5) * 60, Math.random() * 18 + 0.5, (Math.random() - 0.5) * 40 - 8);
+}
+stars.setAttribute('position', new THREE.Float32BufferAttribute(starPos, 3));
+scene.add(new THREE.Points(stars, new THREE.PointsMaterial({ color: 0x4cc9f0, size: 0.06, transparent: true, opacity: 0.7 })));
+
+/* ================= 工具函数 ================= */
+function makeTextTexture(text, opts = {}) {
+  const c = document.createElement('canvas');
+  const w = opts.width || 512, h = opts.height || 256;
+  c.width = w; c.height = h;
+  const g = c.getContext('2d');
+  return { canvas: c, ctx: g, tex: new THREE.CanvasTexture(c) };
+}
+function label(text, cls = '') {
+  const el = document.createElement('div');
+  el.className = 'label3d ' + cls;
+  el.textContent = text;
+  return new CSS2DObject(el);
+}
+function glow(color, intensity = 1) {
+  return new THREE.MeshStandardMaterial({ color, emissive: color, emissiveIntensity: intensity, roughness: 0.3, metalness: 0.2 });
+}
+const clamp01 = v => Math.min(1, Math.max(0, v));
+const lerp = (a, b, t) => a + (b - a) * t;
+function mapRange(t, t0, t1, y0, y1) {
+  return y0 + (y1 - y0) * clamp01((t - t0) / (t1 - t0));
+}
+
+/* ================= 数据路径（互联网数据高速公路） ================= */
+const FRONT = new THREE.Vector3(-7, 0, 0);
+const API = new THREE.Vector3(0, 0, 0);
+const BACK = new THREE.Vector3(7, 0, 0);
+
+const pathCurve = new THREE.CatmullRomCurve3([
+  new THREE.Vector3(-7, 1.75, 0),
+  new THREE.Vector3(-3.5, 2.9, 0),
+  new THREE.Vector3(0, 3.05, 0),
+  new THREE.Vector3(3.5, 2.9, 0),
+  new THREE.Vector3(7, 1.75, 0)
+], false, 'catmullrom', 0.5);
+
+const tube = new THREE.Mesh(
+  new THREE.TubeGeometry(pathCurve, 200, 0.1, 12, false),
+  new THREE.MeshStandardMaterial({ color: 0x2c3d6b, roughness: 0.5, metalness: 0.3, emissive: 0x0d1a3a, emissiveIntensity: 0.7, transparent: true, opacity: 0.95 })
+);
+scene.add(tube);
+
+// 管道路径上的流动粒子（表示数据在流动）
+const flowPts = 160;
+const flowPos = new Float32Array(flowPts * 3);
+const flowGeo = new THREE.BufferGeometry();
+flowGeo.setAttribute('position', new THREE.BufferAttribute(flowPos, 3));
+const flowMat = new THREE.PointsMaterial({ color: 0x4cc9f0, size: 0.12, transparent: true, opacity: 0.9 });
+const flow = new THREE.Points(flowGeo, flowMat);
+scene.add(flow);
+
+/* ================= 前端（浏览器） ================= */
+function buildFrontend() {
+  const g = new THREE.Group();
+  // 底座
+  const stand = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.8, 0.9, 8), new THREE.MeshStandardMaterial({ color: 0x3a4a72, roughness: 0.5, metalness: 0.3 }));
+  stand.position.y = 0.45;
+  stand.castShadow = true;
+  g.add(stand);
+  // 显示器外壳
+  const body = new THREE.Mesh(new THREE.BoxGeometry(2.6, 1.7, 0.24), new THREE.MeshStandardMaterial({ color: 0x2c3e6b, roughness: 0.5, metalness: 0.2 }));
+  body.position.y = 1.85;
+  body.castShadow = true;
+  g.add(body);
+  // 屏幕
+  const screen = makeTextTexture('', { width: 512, height: 320 });
+  const screenMat = new THREE.MeshBasicMaterial({ map: screen.tex });
+  const screenMesh = new THREE.Mesh(new THREE.PlaneGeometry(2.35, 1.5), screenMat);
+  screenMesh.position.set(0, 1.85, 0.13);
+  g.add(screenMesh);
+  g.position.copy(FRONT);
+  return { group: g, screen, screenMesh, screenMat };
+}
+const frontend = buildFrontend();
+scene.add(frontend.group);
+const frontLabel = label('前端（浏览器）');
+frontLabel.position.set(-7, 3.2, 0);
+scene.add(frontLabel);
+
+/* ================= 后端（服务器机架） ================= */
+function buildBackend() {
+  const g = new THREE.Group();
+  const rack = new THREE.Mesh(new THREE.BoxGeometry(1.7, 2.6, 1.3), new THREE.MeshStandardMaterial({ color: 0x2a3a5e, roughness: 0.5, metalness: 0.2 }));
+  rack.position.y = 1.3;
+  rack.castShadow = true;
+  g.add(rack);
+  // 服务器刀片
+  const blades = [];
+  for (let i = 0; i < 3; i++) {
+    const b = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.6, 1.1), new THREE.MeshStandardMaterial({ color: 0x33476e, roughness: 0.5, metalness: 0.25 }));
+    b.position.set(0, 0.85 + i * 0.8, 0);
+    b.castShadow = true;
+    g.add(b);
+    blades.push(b);
+    // 指示灯
+    const led = new THREE.Mesh(new THREE.SphereGeometry(0.06, 12, 12), glow(0x2ecc71, 1.4));
+    led.position.set(0.62, 0.85 + i * 0.8, 0.56);
+    g.add(led);
+    b.userData.led = led;
+  }
+  g.position.copy(BACK);
+  return { group: g, blades };
+}
+const backend = buildBackend();
+scene.add(backend.group);
+const backLabel = label('后端（服务器）');
+backLabel.position.set(7, 3.4, 0);
+scene.add(backLabel);
+
+/* ================= API 网关（中枢） ================= */
+function buildApi() {
+  const g = new THREE.Group();
+  const ring = new THREE.Mesh(new THREE.TorusGeometry(1.1, 0.14, 20, 60), glow(0x9d4edd, 1.4));
+  ring.position.y = 1.35;
+  ring.rotation.x = Math.PI / 2;
+  g.add(ring);
+  const core = new THREE.Mesh(new THREE.IcosahedronGeometry(0.55, 1), glow(0x9d4edd, 1.1));
+  core.position.y = 1.35;
+  g.add(core);
+  const pillar = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.3, 2.7, 12), new THREE.MeshStandardMaterial({ color: 0x3a4a72, roughness: 0.5, metalness: 0.3 }));
+  pillar.position.y = 1.35;
+  pillar.castShadow = true;
+  g.add(pillar);
+  g.position.copy(API);
+  return { group: g, ring, core };
+}
+const api = buildApi();
+scene.add(api.group);
+const apiLabel = label('API 网关', 'small');
+apiLabel.position.set(0, 2.5, 0);
+scene.add(apiLabel);
+const routeLabel = label('GET /api/users/42', 'small');
+routeLabel.position.set(0, 0.9, 0);
+scene.add(routeLabel);
+
+/* ================= 数据包 ================= */
+function buildPacket(color, text, cls) {
+  const g = new THREE.Group();
+  const mesh = new THREE.Mesh(new THREE.OctahedronGeometry(0.34, 0), glow(color, 1.6));
+  g.add(mesh);
+  const trail = new THREE.Mesh(new THREE.SphereGeometry(0.18, 10, 10), new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.45 }));
+  g.add(trail);
+  const l = label(text, cls);
+  l.position.y = 0.65;
+  g.add(l);
+  return { group: g, mesh, trail };
+}
+const requestPacket = buildPacket(0x4cc9f0, '请求 Request', 'small');
+scene.add(requestPacket.group);
+const responsePacket = buildPacket(0x2ecc71, '响应 JSON', 'json-label');
+scene.add(responsePacket.group);
+
+/* ================= 漂浮的 JSON 文档 ================= */
+function buildJsonDoc() {
+  const g = new THREE.Group();
+  const t = makeTextTexture('{ }', { width: 512, height: 320 });
+  const mat = new THREE.MeshBasicMaterial({ map: t.tex, transparent: true });
+  const plane = new THREE.Mesh(new THREE.PlaneGeometry(2.2, 1.4), mat);
+  g.add(plane);
+  g.visible = false;
+  return { group: g, tex: t, mat, plane, ctx: t.ctx, canvas: t.canvas };
+}
+const jsonDoc = buildJsonDoc();
+scene.add(jsonDoc.group);
+
+/* ================= 教学步骤数据 ================= */
+const USER_JSON = {
+  id: 42,
+  name: "小明",
+  role: "全栈开发者",
+  skills: ["JavaScript", "Three.js", "API"],
+  active: true
+};
+const REQUEST_TEXT = 'GET /api/users/42  HTTP/1.1\nHost: example.com\nAccept: application/json';
+
+const STEPS = [
+  { title: '① 用户操作', action: 'frontend', json: null,
+    desc: '用户在前端页面点击「获取用户信息」按钮，浏览器生成一个 HTTP 请求，准备发往服务器。' },
+  { title: '② 请求发出', action: 'req-front-api', json: 'req',
+    desc: '请求包携带「方法 GET + 路径 /api/users/42」从浏览器出发，沿着互联网数据高速公路驶向 API 网关。' },
+  { title: '③ API 网关', action: 'api', json: null,
+    desc: 'API 收到请求后解析路由，识别出要访问「用户服务」，并把请求转发给后端。API 是前后端之间的约定接口。' },
+  { title: '④ 后端处理', action: 'req-api-back', json: null,
+    desc: '后端根据 id=42 查询数据库，取出用户记录，在内存中形成一个「数据对象」。' },
+  { title: '⑤ JSON 序列化', action: 'json', json: 'json',
+    desc: '后端把数据对象序列化成 JSON 字符串——一种轻量、易读、跨语言的文本数据格式（键值对 + 数组 + 布尔值）。' },
+  { title: '⑥ 响应返回', action: 'res-back-front', json: 'json',
+    desc: '携带 JSON 的响应包从后端经 API 返回前端，响应头标注 Content-Type: application/json。' },
+  { title: '⑦ 前端渲染', action: 'render', json: 'json',
+    desc: '前端用 JSON.parse() 解析字符串，把数据渲染到页面，用户最终看到结果。一次完整传输到此完成。' }
+];
+
+/* ================= HUD 渲染 ================= */
+const stepListEl = document.getElementById('stepList');
+const stepTitleEl = document.getElementById('stepTitle');
+const stepDescEl = document.getElementById('stepDesc');
+const jsonCodeEl = document.getElementById('jsonCode');
+
+STEPS.forEach((s, i) => {
+  const div = document.createElement('div');
+  div.className = 'step';
+  div.innerHTML = `<span class="idx">${i + 1}</span><span>${s.title.replace(/^[①②③④⑤⑥⑦] /, '')}</span>`;
+  stepListEl.appendChild(div);
+});
+const stepDoms = stepListEl.children;
+
+function jsonToHtml(obj) {
+  const s = JSON.stringify(obj, null, 2);
+  return s.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?)/g, m => {
+    let cls = 'num';
+    if (/^"/.test(m)) cls = /:\s*$/.test(m) ? 'key' : 'str';
+    else if (/true|false/.test(m)) cls = 'bool';
+    else if (/null/.test(m)) cls = 'null';
+    return '<span class="j-' + cls + '">' + m + '</span>';
+  });
+}
+function requestHtml() {
+  const lines = REQUEST_TEXT.split('\n');
+  return lines.map((ln, i) => {
+    if (i === 0) {
+      const [method, path, ...rest] = ln.split(' ');
+      return '<span class="req-method">' + method + '</span> <span class="req-path">' + path + '</span> ' + rest.join(' ');
+    }
+    return '<span class="req-head">' + ln + '</span>';
+  }).join('\n');
+}
+
+function setStep(i) {
+  const s = STEPS[i];
+  stepTitleEl.textContent = s.title;
+  stepDescEl.textContent = s.desc;
+  for (let k = 0; k < stepDoms.length; k++) {
+    stepDoms[k].classList.toggle('active', k === i);
+    stepDoms[k].classList.toggle('done', k < i);
+  }
+  if (s.json === 'json') jsonCodeEl.innerHTML = jsonToHtml(USER_JSON);
+  else if (s.json === 'req') jsonCodeEl.innerHTML = requestHtml();
+  else jsonCodeEl.innerHTML = '<span class="req-head">… 等待数据 …</span>';
+}
+
+/* ================= 前端屏幕绘制 ================= */
+function drawScreen(state) {
+  const { ctx, canvas, tex } = frontend.screen;
+  const w = canvas.width, h = canvas.height;
+  ctx.fillStyle = '#0e1830'; ctx.fillRect(0, 0, w, h);
+  ctx.strokeStyle = '#22304f'; ctx.strokeRect(0, 0, w, h);
+
+  if (state === 'rendered') {
+    // 渲染后的卡片
+    ctx.fillStyle = '#1b2740'; roundRect(ctx, 30, 26, w - 60, h - 52, 14); ctx.fill();
+    ctx.fillStyle = '#4cc9f0'; ctx.font = 'bold 30px sans-serif'; ctx.textAlign = 'left';
+    ctx.fillText('用户信息', 52, 68);
+    ctx.fillStyle = '#e8eefc'; ctx.font = '26px sans-serif';
+    const rows = [['ID', USER_JSON.id], ['姓名', USER_JSON.name], ['角色', USER_JSON.role], ['技能', USER_JSON.skills.join(' · ')], ['在线', USER_JSON.active ? '是' : '否']];
+    rows.forEach((r, i) => {
+      ctx.fillStyle = '#7cc7ff'; ctx.fillText(r[0] + ':', 52, 106 + i * 34);
+      ctx.fillStyle = '#e8eefc'; ctx.fillText(String(r[1]), 130, 106 + i * 34);
+    });
+  } else if (state === 'sending') {
+    ctx.fillStyle = '#4cc9f0'; ctx.font = 'bold 30px sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText('发送请求…', w / 2, 80);
+    ctx.fillStyle = '#93a3c4'; ctx.font = '20px monospace'; ctx.textAlign = 'left';
+    ctx.fillText('GET /api/users/42', 70, 150);
+    ctx.fillText('Accept: application/json', 70, 185);
+    // 加载动画
+    const n = 3;
+    for (let i = 0; i < n; i++) {
+      const a = ((performance.now() / 300) + i / n) % 1;
+      ctx.fillStyle = 'rgba(76,201,240,' + (1 - a) + ')';
+      ctx.beginPath(); ctx.arc(70 + a * 120, 235, 7, 0, Math.PI * 2); ctx.fill();
+    }
+  } else {
+    ctx.fillStyle = '#1b2740'; roundRect(ctx, 40, 150, w - 80, 76, 12); ctx.fill();
+    ctx.fillStyle = '#4cc9f0'; ctx.font = 'bold 28px sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText('获取用户信息', w / 2, 198);
+    ctx.fillStyle = '#93a3c4'; ctx.font = '20px sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText('等待用户操作…', w / 2, 110);
+  }
+  tex.needsUpdate = true;
+}
+function roundRect(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r);
+  ctx.arcTo(x + w, y + h, x, y + h, r); ctx.arcTo(x, y + h, x, y, r);
+  ctx.arcTo(x, y, x + w, y, r); ctx.closePath();
+}
+
+/* ================= 动画状态 ================= */
+const cycleDuration = 18; // 一个完整传输周期的秒数（速度=1）
+let simTime = 0;
+let playing = true;
+let speed = 1;
+let manualStep = -1; // 手动步进模式时锁定的步骤索引
+const clock = new THREE.Clock();
+let lastStep = -1;
+
+// 步骤的时间窗口（0~1 归一化）
+const WINDOWS = [
+  [0.00, 0.08], [0.08, 0.26], [0.26, 0.36], [0.36, 0.54], [0.54, 0.62], [0.62, 0.88], [0.88, 1.00]
+];
+
+function stepAt(t) {
+  for (let i = 0; i < WINDOWS.length; i++) if (t < WINDOWS[i][1]) return i;
+  return WINDOWS.length - 1;
+}
+
+function updateScene(t, now) {
+  const step = stepAt(t);
+
+  // 请求包位置
+  const reqPos = (() => {
+    if (t < 0.08) return { visible: false, u: 0 };
+    if (t < 0.26) return { visible: true, u: mapRange(t, 0.08, 0.26, 0, 0.5) };
+    if (t < 0.36) return { visible: true, u: 0.5 };
+    if (t < 0.54) return { visible: true, u: mapRange(t, 0.36, 0.54, 0.5, 1.0) };
+    return { visible: false, u: 1.0 };
+  })();
+
+  // 响应包位置
+  const resPos = (() => {
+    if (t < 0.62) return { visible: false, u: 1.0 };
+    if (t < 0.88) return { visible: true, u: mapRange(t, 0.62, 0.88, 1.0, 0.0) };
+    return { visible: false, u: 0.0 };
+  })();
+
+  const p = pathCurve.getPointAt(clamp01(reqPos.u));
+  requestPacket.group.position.copy(p);
+  requestPacket.group.visible = reqPos.visible;
+  requestPacket.mesh.rotation.y += 0.04; requestPacket.mesh.rotation.x += 0.02;
+  const pulse = 1 + Math.sin(now * 6) * 0.18;
+  requestPacket.mesh.scale.setScalar(pulse);
+  requestPacket.trail.scale.setScalar(1 + (1 - clamp01(reqPos.u)) * 0.6);
+
+  const q = pathCurve.getPointAt(clamp01(resPos.u));
+  responsePacket.group.position.copy(q);
+  responsePacket.group.visible = resPos.visible;
+  responsePacket.mesh.rotation.y -= 0.04;
+  const pulse2 = 1 + Math.sin(now * 7) * 0.18;
+  responsePacket.mesh.scale.setScalar(pulse2);
+  responsePacket.trail.scale.setScalar(1 + clamp01(resPos.u) * 0.6);
+
+  // 节点脉冲
+  const frontPulse = (step === 0) ? 0.5 + Math.sin(now * 5) * 0.5 : 0;
+  frontend.screenMesh.material.color.setRGB(1, 1, 1);
+  // 前端屏幕状态
+  const screenState = step >= 6 ? 'rendered' : (step >= 1 && step <= 3 ? 'sending' : 'idle');
+  drawScreen(screenState);
+
+  api.ring.rotation.z += 0.008;
+  api.core.rotation.y += 0.02;
+  const apiPulse = (step === 2) ? 1 + Math.sin(now * 8) * 0.5 : 0;
+  api.core.scale.setScalar(1 + apiPulse * 0.4);
+  api.ring.scale.setScalar(1 + apiPulse * 0.25);
+
+  // 后端 LED
+  backend.blades.forEach((b, i) => {
+    const led = b.userData.led;
+    const on = (step === 3 || step === 4) && (Math.sin(now * 10 + i) > -0.3);
+    led.material.emissiveIntensity = on ? 2.2 : 0.2;
+    led.material.color.setHex(on ? 0x2ecc71 : 0x1c2740);
+  });
+
+  // JSON 文档（步骤⑤～⑥ 悬浮显示，跟随响应包方向）
+  jsonDoc.group.visible = (step === 4 || step === 5 || step === 6);
+  if (jsonDoc.group.visible) {
+    const base = pathCurve.getPointAt(clamp01(resPos.u > 0.01 ? resPos.u : 1.0));
+    jsonDoc.group.position.copy(base).add(new THREE.Vector3(0, 1.5, 0));
+    jsonDoc.group.lookAt(camera.position);
+    const scale = step === 4 ? mapRange(t, 0.54, 0.62, 0.3, 1) : 1;
+    jsonDoc.group.scale.setScalar(scale);
+  }
+
+  // 流动粒子
+  const posArr = flowGeo.attributes.position.array;
+  for (let i = 0; i < flowPts; i++) {
+    const u = (i / flowPts + now * 0.05) % 1;
+    const pp = pathCurve.getPointAt(u);
+    posArr[i * 3] = pp.x; posArr[i * 3 + 1] = pp.y; posArr[i * 3 + 2] = pp.z;
+  }
+  flowGeo.attributes.position.needsUpdate = true;
+
+  // HUD 更新（步骤变化时）
+  if (step !== lastStep) {
+    lastStep = step;
+    setStep(step);
+  }
+}
+
+/* ================= 主循环 ================= */
+function animate() {
+  requestAnimationFrame(animate);
+  const dt = clock.getDelta();
+  if (playing) simTime += dt * speed;
+
+  let t;
+  if (manualStep >= 0) {
+    t = (WINDOWS[manualStep][0] + WINDOWS[manualStep][1]) / 2;
+  } else {
+    t = (simTime % cycleDuration) / cycleDuration;
+  }
+  updateScene(t, performance.now() / 1000);
+
+  controls.update();
+  renderer.render(scene, camera);
+  labelRenderer.render(scene, camera);
+}
+animate();
+
+/* ================= 交互 ================= */
+const btnPlay = document.getElementById('btnPlay');
+btnPlay.addEventListener('click', () => {
+  playing = !playing;
+  manualStep = -1;
+  btnPlay.textContent = playing ? '⏸ 暂停' : '▶ 播放';
+  btnPlay.classList.toggle('primary', playing);
+});
+document.getElementById('btnNext').addEventListener('click', () => {
+  const cur = manualStep >= 0 ? manualStep : stepAt((simTime % cycleDuration) / cycleDuration);
+  manualStep = Math.min(STEPS.length - 1, cur + 1);
+  setStep(manualStep);
+});
+document.getElementById('btnPrev').addEventListener('click', () => {
+  const cur = manualStep >= 0 ? manualStep : stepAt((simTime % cycleDuration) / cycleDuration);
+  manualStep = Math.max(0, cur - 1);
+  setStep(manualStep);
+});
+document.getElementById('btnReset').addEventListener('click', () => {
+  camera.position.set(0, 7.5, 19);
+  controls.target.set(0, 1.4, 0);
+  controls.update();
+});
+document.getElementById('speed').addEventListener('input', e => { speed = parseFloat(e.target.value); });
+
+window.addEventListener('resize', () => {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  labelRenderer.setSize(window.innerWidth, window.innerHeight);
+});
+
+setStep(0);
+drawScreen('idle');
+
+// 加载失败提示
+window.addEventListener('error', e => {
+  if (e.target && e.target.tagName === 'SCRIPT' && !window.THREE && typeof THREE === 'undefined') {
+    document.getElementById('json').innerHTML = '<h2 style="color:#ff6b6b">⚠ 无法加载 Three.js（CDN）</h2><p style="font-size:12px;color:#93a3c4">请检查网络连接后刷新页面。</p>';
+  }
+}, true);
+</script>
+</body>
+</html>
