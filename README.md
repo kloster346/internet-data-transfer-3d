@@ -1,6 +1,6 @@
 # 互联网数据传输 · 3D 教学动画
 
-一个基于 **Three.js** 的交互式 3D 教学动画，用可视化方式演示"一次完整的数据请求"如何在前端、后端、API 之间流转，并讲解 **JSON 数据格式**。
+一个基于 **Three.js + Vite + TypeScript** 的交互式 3D 教学动画，用可视化方式演示"一次完整的数据请求"如何在前端、后端、API 之间流转，并讲解 **JSON 数据格式**。
 
 ## ✨ 演示内容
 
@@ -28,30 +28,29 @@
 - **绿色数据包** = 响应 + JSON 数据
 - 管道路径上的流动粒子 = 正在传输的数据流
 
-右侧面板实时展示 **JSON 响应数据**，并用不同颜色标注各数据类型的语法：
-
-- 🔵 键名 `"key"`　🟢 字符串 `"value"`　🟡 数字 `42`　🩷 布尔 `true`　🔴 `null`　以及 `{}` 对象、`[]` 数组
+右侧面板实时展示 **JSON 响应数据**，并用不同颜色标注各数据类型的语法：🔵 键名、🟢 字符串、🟡 数字、🩷 布尔、🔴 `null`，以及 `{}` 对象、`[]` 数组。
 
 ## 🚀 如何运行
 
-> 动画依赖 ES Module（`import`），浏览器会阻止通过 `file://` 直接加载本地模块。请用下面的任一方式通过 HTTP 访问。
-
 **方式一：一键启动（Windows）**
 
-双击 `start.bat`，会自动启动本地服务器并打开浏览器。
+双击 `start.bat` —— 自动检测 Node、安装依赖并启动开发服务器，浏览器会自动打开。
 
 **方式二：命令行**
 
 ```bash
-# 在本目录下执行
-python -m http.server 8000
-# 然后浏览器打开
-http://localhost:8000/index.html
+npm install      # 首次运行需安装依赖
+npm run dev      # 开发模式，浏览器打开 http://localhost:5173
 ```
 
-**方式三：VS Code**
+**生产构建**
 
-安装 [Live Server](https://marketplace.visualstudio.com/items?itemName=ritwickdey.LiveServer) 插件，右键 `index.html` → *Open with Live Server*。
+```bash
+npm run build    # 类型检查 + 构建，输出到 dist/
+npm run preview  # 本地预览构建产物
+```
+
+> 需要 Node.js 18+（建议 LTS）。
 
 ## 🖱 操作说明
 
@@ -65,25 +64,29 @@ http://localhost:8000/index.html
 | 速度滑块 | 调整动画播放速度 |
 | ⌖ 视角 | 重置相机到默认视角 |
 
-## 📁 文件结构
+## 📁 目录结构
 
 ```
 json-tech-02/
-├── index.html          # 主文件（3D 场景 + 教学 HUD，全部逻辑）
-├── vendor/
-│   ├── three.module.js # Three.js 核心（已本地化，离线可用）
-│   ├── OrbitControls.js
-│   └── CSS2DRenderer.js
-├── start.bat           # Windows 一键启动脚本
+├── index.html            # Vite 入口（挂载壳 + HUD DOM）
+├── package.json / tsconfig.json / vite.config.js
+├── src/
+│   ├── main.ts           # 装配入口
+│   ├── style.css         # HUD 样式
+│   ├── core/             # 渲染器 / 相机 / 循环引擎
+│   ├── world/            # 场景 / 节点 / 路径 / 数据包
+│   ├── ui/               # HUD 面板与交互
+│   └── data/             # 步骤数据与类型
+├── legacy.html           # 旧单文件版本备份（参考）
 └── README.md
 ```
 
 ## 🛠 技术栈
 
 - **Three.js** 0.160 —— 3D 渲染（WebGL）
-- **OrbitControls** —— 相机轨道控制
-- **CSS2DRenderer** —— 3D 空间中的文字标签
-- 无构建工具、无外部 CDN 依赖，单个页面即可运行
+- **Vite** 5 —— 开发服务器与构建
+- **TypeScript** 5 —— 类型安全、模块化
+- **OrbitControls** / **CSS2DRenderer** —— 相机控制与 3D 文字标签
 
 ## 🎓 教学要点（JSON 数据格式）
 
@@ -105,3 +108,12 @@ JSON 是一种**轻量、易读、跨语言**的文本数据格式，核心规�
 2. 支持 **字符串、数字、布尔值、null、数组、对象** 六种类型
 3. **数组** 用 `[]` 表示有序列表，**对象** 用 `{}` 表示无序键值集合
 4. 前后端约定用 `Content-Type: application/json` 标识数据格式
+
+## 🔧 开发命令
+
+```bash
+npm run dev         # 启动开发服务器
+npm run type-check  # TypeScript 类型检查
+npm run build       # 类型检查 + 生产构建
+npm run preview     # 预览构建产物
+```

@@ -1,0 +1,21 @@
+{
+  "name": "internet-data-transfer-3d",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "互联网数据传输 · 3D 教学动画（前端 / 后端 / API / JSON）",
+  "scripts": {
+    "dev": "vite",
+    "type-check": "tsc --noEmit",
+    "build": "tsc && vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "three": "0.160.0"
+  },
+  "devDependencies": {
+    "@types/three": "0.160.0",
+    "typescript": "^5.5.4",
+    "vite": "^5.4.2"
+  }
+}

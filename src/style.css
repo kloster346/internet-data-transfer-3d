@@ -1,0 +1,130 @@
+:root {
+  --bg: #070b16;
+  --panel: rgba(15, 22, 42, 0.86);
+  --border: rgba(120, 160, 255, 0.18);
+  --text: #e8eefc;
+  --muted: #93a3c4;
+  --cyan: #4cc9f0;
+  --blue: #4361ee;
+  --green: #2ecc71;
+  --pink: #f72585;
+  --purple: #9d4edd;
+  --amber: #ffb703;
+}
+* { box-sizing: border-box; }
+html, body {
+  margin: 0; padding: 0; height: 100%;
+  background: var(--bg); color: var(--text);
+  font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+  overflow: hidden;
+}
+#app { position: fixed; inset: 0; }
+#app canvas { display: block; }
+
+/* ---------- 顶部标题 ---------- */
+#title {
+  position: fixed; top: 14px; left: 16px; z-index: 10;
+  pointer-events: none;
+}
+#title h1 {
+  margin: 0; font-size: 20px; letter-spacing: 0.5px; font-weight: 650;
+}
+#title h1 .accent { color: var(--cyan); }
+#title .sub { margin-top: 4px; font-size: 12px; color: var(--muted); }
+
+/* ---------- 左侧步骤面板 ---------- */
+#steps {
+  position: fixed; left: 16px; bottom: 16px; z-index: 10;
+  width: 340px; max-width: calc(100vw - 32px);
+  background: var(--panel); border: 1px solid var(--border);
+  border-radius: 14px; padding: 14px 16px;
+  backdrop-filter: blur(10px);
+}
+#steps .list { display: flex; flex-direction: column; gap: 4px; margin-bottom: 10px; }
+#steps .step {
+  display: flex; align-items: baseline; gap: 8px;
+  font-size: 12.5px; color: var(--muted);
+  padding: 3px 6px; border-radius: 6px; transition: all .25s;
+}
+#steps .step .idx {
+  flex: 0 0 18px; height: 18px; line-height: 18px; text-align: center;
+  border-radius: 50%; font-size: 10.5px; background: rgba(255,255,255,0.06);
+  color: var(--muted);
+}
+#steps .step.active { background: rgba(76, 201, 240, 0.10); color: var(--text); }
+#steps .step.active .idx { background: var(--cyan); color: #04222e; font-weight: 700; }
+#steps .step.done { color: var(--muted); }
+#steps .detail { border-top: 1px solid var(--border); padding-top: 10px; }
+#steps .detail h2 { margin: 0 0 4px; font-size: 14px; color: var(--cyan); }
+#steps .detail p { margin: 0; font-size: 12.5px; line-height: 1.55; color: var(--text); }
+
+/* ---------- 右侧 JSON 面板 ---------- */
+#json {
+  position: fixed; right: 16px; top: 16px; z-index: 10;
+  width: 340px; max-width: calc(100vw - 32px);
+  background: var(--panel); border: 1px solid var(--border);
+  border-radius: 14px; padding: 14px 16px;
+  backdrop-filter: blur(10px);
+}
+#json h2 {
+  margin: 0 0 6px; font-size: 13px; color: var(--green);
+  display: flex; align-items: center; gap: 8px;
+}
+#json .tag {
+  font-size: 10px; padding: 1px 6px; border-radius: 4px;
+  background: rgba(46, 204, 113, 0.15); color: var(--green); font-weight: 600;
+}
+#json pre {
+  margin: 0; font-size: 12px; line-height: 1.5;
+  font-family: "Cascadia Code", "JetBrains Mono", Consolas, monospace;
+  background: rgba(0,0,0,0.28); border: 1px solid var(--border);
+  border-radius: 8px; padding: 10px 12px; overflow: auto; max-height: 220px;
+  color: #dfe7f7; white-space: pre;
+}
+#json .legend { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 6px; }
+#json .legend span { font-size: 10.5px; color: var(--muted); }
+.j-key { color: #7cc7ff; }
+.j-str { color: #9ce8b0; }
+.j-num { color: #ffb703; }
+.j-bool { color: #ff7ad9; }
+.j-null { color: #ff6b6b; }
+.req-method { color: #4cc9f0; font-weight: 700; }
+.req-path { color: #9ce8b0; }
+.req-head { color: #93a3c4; }
+
+/* ---------- 底部控制 ---------- */
+#controls {
+  position: fixed; right: 16px; bottom: 16px; z-index: 10;
+  display: flex; align-items: center; gap: 8px;
+  background: var(--panel); border: 1px solid var(--border);
+  border-radius: 12px; padding: 8px 12px; backdrop-filter: blur(10px);
+}
+#controls button {
+  border: 1px solid var(--border); background: rgba(255,255,255,0.05);
+  color: var(--text); border-radius: 8px; cursor: pointer;
+  padding: 7px 11px; font-size: 12px; transition: all .15s;
+}
+#controls button:hover { background: rgba(255,255,255,0.12); }
+#controls button.primary { background: var(--cyan); color: #04222e; border-color: var(--cyan); font-weight: 700; }
+#controls label { font-size: 11px; color: var(--muted); display: flex; align-items: center; gap: 6px; }
+#controls input[type="range"] { width: 90px; accent-color: var(--cyan); }
+
+#hint {
+  position: fixed; bottom: 6px; left: 50%; transform: translateX(-50%);
+  z-index: 10; font-size: 11px; color: var(--muted); pointer-events: none;
+  opacity: 0.7;
+}
+
+/* ---------- 3D 标签（CSS2D）---------- */
+.label3d {
+  color: #fff; font-size: 13px; font-weight: 600; white-space: nowrap;
+  text-shadow: 0 1px 6px rgba(0,0,0,0.9); pointer-events: none;
+  transform: translate(-50%, -50%);
+}
+.label3d.small { font-size: 11px; font-weight: 500; color: #cfe0ff; }
+.label3d.json-label { color: #9ce8b0; }
+
+@media (max-width: 760px) {
+  #json { display: none; }
+  #steps { width: 100%; left: 0; bottom: 0; border-radius: 14px 14px 0 0; }
+}
