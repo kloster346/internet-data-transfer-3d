@@ -45,6 +45,12 @@ export function createHud(): Hud {
     if (!s) return;
     stepTitleEl.textContent = s.title;
     stepDescEl.textContent = s.desc;
+    // 重新触发淡入动画
+    stepTitleEl.classList.remove('swap');
+    stepDescEl.classList.remove('swap');
+    void stepTitleEl.offsetWidth;
+    stepTitleEl.classList.add('swap');
+    stepDescEl.classList.add('swap');
     for (let k = 0; k < stepDoms.length; k++) {
       stepDoms[k].classList.toggle('active', k === i);
       stepDoms[k].classList.toggle('done', k < i);

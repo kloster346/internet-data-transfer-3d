@@ -3,24 +3,31 @@ import { label, glow } from './materials';
 import { USER_JSON } from '../data/scenarios';
 import type { PacketKind, PacketSpec } from '../data/types';
 
+/** 彗尾采样点数 */
+export const TRAIL_N = 14;
+
 export interface Packet {
   group: THREE.Group;
   mesh: THREE.Mesh;
   trail: THREE.Mesh;
+  trailPts: THREE.Points;
+  trailGeo: THREE.BufferGeometry;
+  /** 最近位置历史（越长越新的在前） */
+  history: THREE.Vector3[];
+  baseColor: THREE.Color;
 }
 
 export interface JsonDoc {
   group: THREE.Group;
-  /** 载荷变化后重绘 JSON 文档面片 */
   redraw(): void;
 }
 
-/** 数据包池键（kind + link + color，允许不同场景用不同色） */
+/** 数据包池键（kind + link + color） */
 export function packetKey(spec: PacketSpec): string {
   return spec.kind + ':' + spec.link + ':' + spec.color;
 }
 
-/** 不同协议类型用不同形状，增强可辨识度 */
+/** 不同协议类型用不同形状 */
 function shapeFor(kind: PacketKind): THREE.BufferGeometry {
   switch (kind) {
     case 'tcp-syn':
@@ -38,11 +45,38 @@ function shapeFor(kind: PacketKind): THREE.BufferGeometry {
   }
 }
 
-/** 数据包：按类型取形状，主体发光 + 尾迹光球 + CSS2D 标签 */
+/** 更新彗尾：把当前位置插入历史，按新旧程度着色（越旧越暗） */
+export function updateTrail(pkt: Packet, pos: THREE.Vector3): void {
+  pkt.history.unshift(pos.clone());
+  if (pkt.history.length > TRAIL_N) pkt.history.pop();
+
+  const posAttr = pkt.trailGeo.getAttribute('position') as THREE.BufferAttribute;
+  const colAttr = pkt.trailGeo.getAttribute('color') as THREE.BufferAttribute;
+  for (let i = 0; i < TRAIL_N; i++) {
+    const p = pkt.history[i];
+    if (p) {
+      posAttr.setXYZ(i, p.x, p.y, p.z);
+      const f = 1 - i / TRAIL_N;
+      colAttr.setXYZ(i, pkt.baseColor.r * f, pkt.baseColor.g * f, pkt.baseColor.b * f);
+    } else {
+      posAttr.setXYZ(i, pos.x, pos.y, pos.z);
+      colAttr.setXYZ(i, 0, 0, 0);
+    }
+  }
+  posAttr.needsUpdate = true;
+  colAttr.needsUpdate = true;
+}
+
+export function resetTrail(pkt: Packet): void {
+  pkt.history.length = 0;
+}
+
+/** 数据包：发光主体 + 尾迹光球 + 彗尾粒子 + CSS2D 标签 */
 export function buildPacket(spec: PacketSpec): Packet {
   const g = new THREE.Group();
   const mesh = new THREE.Mesh(shapeFor(spec.kind), glow(spec.color, 1.4));
   g.add(mesh);
+
   const trail = new THREE.Mesh(
     new THREE.SphereGeometry(0.2, 10, 10),
     new THREE.MeshBasicMaterial({
@@ -54,10 +88,30 @@ export function buildPacket(spec: PacketSpec): Packet {
     })
   );
   g.add(trail);
+
+  const trailGeo = new THREE.BufferGeometry();
+  trailGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(TRAIL_N * 3), 3));
+  trailGeo.setAttribute('color', new THREE.BufferAttribute(new Float32Array(TRAIL_N * 3), 3));
+  const trailPts = new THREE.Points(
+    trailGeo,
+    new THREE.PointsMaterial({
+      size: 0.2,
+      vertexColors: true,
+      transparent: true,
+      opacity: 0.9,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+      sizeAttenuation: true
+    })
+  );
+  trailPts.frustumCulled = false;
+  g.add(trailPts);
+
   const l = label(spec.label, 'small');
   l.position.y = 0.6;
   g.add(l);
-  return { group: g, mesh, trail };
+
+  return { group: g, mesh, trail, trailPts, trailGeo, history: [], baseColor: new THREE.Color(spec.color) };
 }
 
 /** 在画布上绘制 JSON 键值对（后端序列化结果的可视化） */

@@ -4,6 +4,7 @@ import { createRenderers } from './core/renderer';
 import { createCamera, createCameraRig } from './core/camera';
 import { setupEnvironment } from './world/scene';
 import { buildAllNodes, addNodeLabels } from './world/nodes';
+import { buildBackdrop } from './world/backdrop';
 import { buildLinks } from './world/links';
 import { buildPacket, buildJsonDoc, packetKey, type Packet } from './world/packets';
 import { createEngine } from './core/engine';
@@ -26,6 +27,7 @@ const cameraRig = createCameraRig(camera, renderers.renderer.domElement);
 const { controls } = cameraRig;
 
 setupEnvironment(scene);
+buildBackdrop(scene);
 
 // 构建 8 节点拓扑 + 链路 + 数据包池（跨场景去重）+ JSON 文档
 const nodes = buildAllNodes();
@@ -54,10 +56,16 @@ scene.add(jsonDoc.group);
 // UI 门面：引擎只依赖最小接口，门面同时驱动 HUD 与右侧面板
 const hud = createHud();
 const panels = createPanels();
+let currentScenario: Scenario = SCENARIO;
 const ui = {
   setStep: (i: number): void => {
     hud.setStep(i);
     panels.setStep(i);
+    const activeId = currentScenario.steps[i]?.activate[0];
+    if (activeId) {
+      const np = nodes.list.get(activeId);
+      if (np) cameraRig.focusOn(np.group.position);
+    }
   },
   setPlaying: (p: boolean): void => hud.setPlaying(p),
   setScenario: (sc: Scenario): void => {
@@ -101,6 +109,7 @@ createInspector(camera, nodes, renderers.renderer.domElement);
 
 function switchScenario(id: string): void {
   const sc = getScenario(id);
+  currentScenario = sc;
   engine.setScenario(sc);
   timeline.setScenario(sc);
 }
@@ -116,14 +125,17 @@ btnFx.addEventListener('click', () => {
 });
 
 ui.setStep(0);
+cameraRig.startIntro();
 
+let lastNow = performance.now() / 1000;
 function animate(): void {
   requestAnimationFrame(animate);
   const now = performance.now() / 1000;
+  const dt = Math.min(0.1, now - lastNow);
+  lastNow = now;
   engine.frame();
   timeline.update(engine.getCurrentTime(), engine.currentStep());
-  cameraRig.update(now);
-  controls.update();
+  cameraRig.update(dt, now);
   renderers.render(scene, camera);
   renderers.labelRenderer.render(scene, camera);
 }

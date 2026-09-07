@@ -24,15 +24,9 @@ export function setupEnvironment(scene: THREE.Scene): void {
 
   const grid = new THREE.GridHelper(40, 40, 0x2a3f70, 0x17233f);
   grid.position.y = -0.02;
+  grid.material.opacity = 0.5;
+  grid.material.transparent = true;
   scene.add(grid);
-
-  const floor = new THREE.Mesh(
-    new THREE.PlaneGeometry(40, 40),
-    new THREE.MeshStandardMaterial({ color: 0x0d1530, roughness: 0.95, metalness: 0.1 })
-  );
-  floor.rotation.x = -Math.PI / 2;
-  floor.receiveShadow = true;
-  scene.add(floor);
 
   const stars = new THREE.BufferGeometry();
   const starPos: number[] = [];

@@ -58,6 +58,8 @@ html, body {
 #steps .step.active .idx { background: var(--cyan); color: #04222e; font-weight: 700; }
 #steps .step.done { color: var(--muted); }
 #steps .detail { border-top: 1px solid var(--border); padding-top: 10px; }
+#steps .detail h2.swap, #steps .detail p.swap { animation: fadeUp .38s ease; }
+@keyframes fadeUp { from { opacity: 0; transform: translateY(7px); } to { opacity: 1; transform: none; } }
 #steps .detail h2 { margin: 0 0 4px; font-size: 14px; color: var(--cyan); }
 #steps .detail p { margin: 0; font-size: 12.5px; line-height: 1.55; color: var(--text); }
 
