@@ -2,16 +2,22 @@ import * as THREE from 'three';
 import { clamp01, mapRange } from '../world/materials';
 import { drawScreen, type Nodes } from '../world/nodes';
 import type { Link } from '../world/links';
-import type { Packet } from '../world/packets';
+import { packetKey, type Packet } from '../world/packets';
 import type { Scenario, ScreenState } from '../data/types';
-import type { Hud } from '../ui/hud';
+
+/** 引擎依赖的最小 UI 接口（由 main.ts 用 hud + panels 门面实现） */
+export interface EngineUi {
+  setStep(i: number): void;
+  setPlaying(p: boolean): void;
+  setScenario(sc: Scenario): void;
+}
 
 export interface WorldRefs {
   scene: THREE.Scene;
   camera: THREE.PerspectiveCamera;
   nodes: Nodes;
   links: Map<string, Link>;
-  /** 数据包池，键为 `${kind}:${link}` */
+  /** 数据包池（跨场景去重） */
   packets: Map<string, Packet>;
   jsonDoc: THREE.Group;
   scenario: Scenario;
@@ -25,26 +31,32 @@ export interface Engine {
   setSpeed(v: number): void;
   currentStep(): number;
   stepCount(): number;
+  getTotalDuration(): number;
+  getCurrentTime(): number;
+  getStepAtTime(time: number): number;
+  setScenario(scenario: Scenario): void;
+  scrub(time: number): void;
 }
 
-/**
- * 数据驱动时间线引擎：持有模拟时间与播放状态，每帧定位当前步骤，
- * 把该步骤的数据包沿对应链路按 t0/t1 定位、脉冲激活节点、更新 HUD。
- */
-export function createEngine(refs: WorldRefs, hud: Hud): Engine {
-  const { camera, nodes, links, packets, jsonDoc, scenario } = refs;
-  const steps = scenario.steps;
+export function createEngine(refs: WorldRefs, ui: EngineUi): Engine {
+  const { camera, nodes, links, packets, jsonDoc } = refs;
+  let scenario = refs.scenario;
+  let steps = scenario.steps;
 
-  // 累计时长与每步起始偏移
-  const offsets: number[] = [];
+  let offsets: number[] = [];
   let total = 0;
-  for (const st of steps) {
-    offsets.push(total);
-    total += st.duration;
-  }
+  let firstSend = -1;
 
-  // 「发送中」从第一个含 http-request 包的步骤开始，直到最后一步之前
-  const firstSend = steps.findIndex((s) => s.packets.some((p) => p.spec.kind === 'http-request'));
+  function recompute(): void {
+    offsets = [];
+    total = 0;
+    for (const st of steps) {
+      offsets.push(total);
+      total += st.duration;
+    }
+    firstSend = steps.findIndex((s) => s.packets.some((p) => p.spec.kind === 'http-request'));
+  }
+  recompute();
 
   const clock = new THREE.Clock();
   let simTime = 0;
@@ -73,10 +85,9 @@ export function createEngine(refs: WorldRefs, hud: Hud): Engine {
     const { index, progress } = locate(time);
     const step = steps[index];
 
-    // 隐藏所有数据包，再按当前步骤显示并定位
     for (const p of packets.values()) p.group.visible = false;
     for (const sp of step.packets) {
-      const pkt = packets.get(sp.spec.kind + ':' + sp.spec.link);
+      const pkt = packets.get(packetKey(sp.spec));
       const link = links.get(sp.spec.link);
       if (!pkt || !link) continue;
       const within = progress >= sp.t0 - 1e-4 && progress <= sp.t1 + 1e-4;
@@ -93,7 +104,6 @@ export function createEngine(refs: WorldRefs, hud: Hud): Engine {
       }
     }
 
-    // 节点激活脉冲
     for (const node of nodes.list.values()) {
       const active = step.activate.includes(node.id);
       for (const gm of node.glowMeshes) {
@@ -110,7 +120,6 @@ export function createEngine(refs: WorldRefs, hud: Hud): Engine {
       }
     }
 
-    // 前端屏幕：最后一步=渲染完成；首个 HTTP 请求之后=发送中；其余=空闲
     const screenState: ScreenState =
       index === steps.length - 1
         ? 'rendered'
@@ -119,16 +128,14 @@ export function createEngine(refs: WorldRefs, hud: Hud): Engine {
           : 'idle';
     drawScreen(nodes.client, screenState);
 
-    // JSON 文档（JSON 序列化 / 响应 / 渲染阶段悬浮在后端上方）
     jsonDoc.visible = step.ui?.json === 'json';
     if (jsonDoc.visible) {
       const bp = nodes.list.get('backend')!.group.position;
       jsonDoc.position.set(bp.x, bp.y + 3.4, bp.z);
       jsonDoc.lookAt(camera.position);
-      jsonDoc.scale.setScalar(index === 11 ? mapRange(progress, 0, 1, 0.3, 1) : 1);
+      jsonDoc.scale.setScalar(index === steps.findIndex((s) => s.ui?.json === 'json') ? mapRange(progress, 0, 1, 0.3, 1) : 1);
     }
 
-    // 链路流动粒子
     for (const link of links.values()) {
       const arr = (link.flowGeo.attributes.position as THREE.BufferAttribute).array as Float32Array;
       for (let i = 0; i < link.flowPts; i++) {
@@ -143,7 +150,7 @@ export function createEngine(refs: WorldRefs, hud: Hud): Engine {
 
     if (index !== lastStep) {
       lastStep = index;
-      hud.setStep(index);
+      ui.setStep(index);
     }
   }
 
@@ -158,22 +165,38 @@ export function createEngine(refs: WorldRefs, hud: Hud): Engine {
     toggle() {
       playing = !playing;
       manualStep = -1;
-      hud.setPlaying(playing);
+      ui.setPlaying(playing);
     },
     next() {
       const cur = currentStep();
       manualStep = Math.min(steps.length - 1, cur + 1);
-      hud.setStep(manualStep);
+      ui.setStep(manualStep);
     },
     prev() {
       const cur = currentStep();
       manualStep = Math.max(0, cur - 1);
-      hud.setStep(manualStep);
+      ui.setStep(manualStep);
     },
     setSpeed(v) {
       speed = v;
     },
     currentStep,
-    stepCount: () => steps.length
+    stepCount: () => steps.length,
+    getTotalDuration: () => total,
+    getCurrentTime: () => (manualStep >= 0 ? stepMid(manualStep) : simTime % total),
+    getStepAtTime: (time) => locate(time).index,
+    setScenario(next) {
+      scenario = next;
+      steps = next.steps;
+      recompute();
+      simTime = 0;
+      manualStep = -1;
+      lastStep = -1;
+      ui.setScenario(next);
+    },
+    scrub(time) {
+      manualStep = -1;
+      simTime = ((time % total) + total) % total;
+    }
   };
 }

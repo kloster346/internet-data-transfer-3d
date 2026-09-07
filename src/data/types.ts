@@ -57,6 +57,8 @@ export interface Scenario {
   id: string;
   name: string;
   steps: Step[];
+  request: { method: string; path: string };
+  response: { status: number; statusText: string };
 }
 
 export type ScreenState = 'idle' | 'sending' | 'rendered';

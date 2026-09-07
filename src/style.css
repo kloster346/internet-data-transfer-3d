@@ -34,7 +34,7 @@ html, body {
 
 /* ---------- 左侧步骤面板 ---------- */
 #steps {
-  position: fixed; left: 16px; bottom: 16px; z-index: 10;
+  position: fixed; left: 16px; bottom: 56px; z-index: 10;
   width: 340px; max-width: calc(100vw - 32px);
   background: var(--panel); border: 1px solid var(--border);
   border-radius: 14px; padding: 14px 16px;
@@ -62,30 +62,30 @@ html, body {
 #steps .detail p { margin: 0; font-size: 12.5px; line-height: 1.55; color: var(--text); }
 
 /* ---------- 右侧 JSON 面板 ---------- */
-#json {
+#panel {
   position: fixed; right: 16px; top: 16px; z-index: 10;
   width: 340px; max-width: calc(100vw - 32px);
   background: var(--panel); border: 1px solid var(--border);
   border-radius: 14px; padding: 14px 16px;
   backdrop-filter: blur(10px);
 }
-#json h2 {
+#panel h2 {
   margin: 0 0 6px; font-size: 13px; color: var(--green);
   display: flex; align-items: center; gap: 8px;
 }
-#json .tag {
+#panel .tag {
   font-size: 10px; padding: 1px 6px; border-radius: 4px;
   background: rgba(46, 204, 113, 0.15); color: var(--green); font-weight: 600;
 }
-#json pre {
+#panel pre {
   margin: 0; font-size: 12px; line-height: 1.5;
   font-family: "Cascadia Code", "JetBrains Mono", Consolas, monospace;
   background: rgba(0,0,0,0.28); border: 1px solid var(--border);
   border-radius: 8px; padding: 10px 12px; overflow: auto; max-height: 220px;
   color: #dfe7f7; white-space: pre;
 }
-#json .legend { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 6px; }
-#json .legend span { font-size: 10.5px; color: var(--muted); }
+#panel .legend { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 6px; }
+#panel .legend span { font-size: 10.5px; color: var(--muted); }
 .j-key { color: #7cc7ff; }
 .j-str { color: #9ce8b0; }
 .j-num { color: #ffb703; }
@@ -97,7 +97,7 @@ html, body {
 
 /* ---------- 底部控制 ---------- */
 #controls {
-  position: fixed; right: 16px; bottom: 16px; z-index: 10;
+  position: fixed; right: 16px; bottom: 56px; z-index: 10;
   display: flex; align-items: center; gap: 8px;
   background: var(--panel); border: 1px solid var(--border);
   border-radius: 12px; padding: 8px 12px; backdrop-filter: blur(10px);
@@ -128,6 +128,78 @@ html, body {
 .label3d.json-label { color: #9ce8b0; }
 
 @media (max-width: 760px) {
-  #json { display: none; }
+  #panel { display: none; }
   #steps { width: 100%; left: 0; bottom: 0; border-radius: 14px 14px 0 0; }
 }
+
+/* ---------- 标签面板（JSON / 代码 / 网络） ---------- */
+#panel .tabs { display: flex; gap: 6px; margin-bottom: 10px; }
+#panel .tab {
+  flex: 1; border: 1px solid var(--border); background: rgba(255,255,255,0.05);
+  color: var(--muted); border-radius: 8px; cursor: pointer; padding: 6px 0; font-size: 12px;
+  transition: all .15s;
+}
+#panel .tab:hover { background: rgba(255,255,255,0.12); }
+#panel .tab.active { background: var(--cyan); color: #04222e; border-color: var(--cyan); font-weight: 700; }
+#panel .toolbar { display: flex; justify-content: flex-end; margin-bottom: 6px; }
+#panel .mini {
+  border: 1px solid var(--border); background: rgba(255,255,255,0.05); color: var(--text);
+  border-radius: 6px; cursor: pointer; padding: 4px 10px; font-size: 11px;
+}
+#panel .mini:hover { background: rgba(255,255,255,0.12); }
+#jsonEdit {
+  width: 100%; height: 220px; margin: 0; font-size: 12px; line-height: 1.5;
+  font-family: "Cascadia Code", Consolas, monospace; background: rgba(0,0,0,0.28);
+  border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; color: #dfe7f7; resize: vertical;
+}
+#jsonEdit.invalid { border-color: #ff6b6b; box-shadow: 0 0 0 2px rgba(255,107,107,0.25); }
+.codeview { max-height: 340px; }
+.code-file { font-size: 11px; color: var(--cyan); margin: 8px 0 4px; font-weight: 600; }
+.code-line { font-size: 12px; line-height: 1.6; color: #dfe7f7; padding: 0 6px; border-radius: 4px; white-space: pre; }
+.code-line.focus { background: rgba(76,201,240,0.16); color: #fff; }
+.net-req-line { font-size: 12px; font-family: Consolas, monospace; margin-bottom: 8px; padding: 8px 10px; background: rgba(0,0,0,0.28); border: 1px solid var(--border); border-radius: 8px; }
+.net-status { font-weight: 700; margin-left: 8px; }
+.net-status.ok { color: var(--green); }
+.net-status.err { color: #ff6b6b; }
+.net-waterfall { display: flex; flex-direction: column; gap: 3px; max-height: 340px; overflow-y: auto; }
+.wf-row { display: flex; align-items: center; gap: 8px; font-size: 11px; }
+.wf-name { flex: 0 0 96px; color: var(--muted); text-align: right; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.wf-bar { flex: 1; height: 12px; background: rgba(255,255,255,0.06); border-radius: 6px; overflow: hidden; }
+.wf-fill { display: block; height: 100%; background: var(--cyan); border-radius: 6px; }
+.wf-dur { flex: 0 0 40px; color: var(--muted); text-align: right; }
+.wf-row.active .wf-name { color: var(--text); font-weight: 600; }
+.wf-row.active .wf-fill { background: var(--green); }
+
+/* ---------- 场景选择 ---------- */
+#scenarioBar {
+  position: fixed; top: 14px; left: 50%; transform: translateX(-50%); z-index: 10;
+  display: flex; align-items: center; gap: 8px;
+  background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 6px 10px;
+  backdrop-filter: blur(10px);
+}
+#scenarioBar label { font-size: 12px; color: var(--muted); }
+#scenarioBar select {
+  background: rgba(0,0,0,0.3); color: var(--text); border: 1px solid var(--border);
+  border-radius: 6px; padding: 4px 8px; font-size: 12px; cursor: pointer;
+}
+
+/* ---------- 时间轴 ---------- */
+#timeline {
+  position: fixed; bottom: 12px; left: 16px; right: 16px; height: 34px; z-index: 10;
+  background: var(--panel); border: 1px solid var(--border); border-radius: 10px;
+  display: flex; align-items: center; padding: 0 6px; backdrop-filter: blur(10px);
+}
+#tlTrack { position: relative; display: flex; flex: 1; height: 16px; border-radius: 8px; overflow: hidden; gap: 2px; cursor: pointer; }
+.tl-seg { background: rgba(255,255,255,0.07); border-radius: 3px; min-width: 4px; }
+.tl-seg.active { background: var(--cyan); }
+#tlPlayhead { position: absolute; width: 2px; height: 26px; background: #fff; top: 4px; left: 0; pointer-events: none; box-shadow: 0 0 6px rgba(255,255,255,0.8); }
+
+/* ---------- 节点详情 ---------- */
+#inspector {
+  position: fixed; z-index: 20; width: 210px; background: var(--panel); border: 1px solid var(--border);
+  border-radius: 10px; padding: 10px 12px; backdrop-filter: blur(10px); pointer-events: none;
+}
+#inspector .ins-title { font-size: 14px; font-weight: 700; color: var(--cyan); margin-bottom: 6px; }
+#inspector .ins-row { font-size: 11px; color: var(--text); margin: 2px 0; }
+#inspector .ins-row b { color: var(--muted); margin-right: 6px; }
+#inspector .ins-desc { font-size: 11px; color: var(--muted); margin-top: 6px; line-height: 1.5; }

@@ -9,6 +9,17 @@ export interface Packet {
   trail: THREE.Mesh;
 }
 
+export interface JsonDoc {
+  group: THREE.Group;
+  /** 载荷变化后重绘 JSON 文档面片 */
+  redraw(): void;
+}
+
+/** 数据包池键（kind + link + color，允许不同场景用不同色） */
+export function packetKey(spec: PacketSpec): string {
+  return spec.kind + ':' + spec.link + ':' + spec.color;
+}
+
 /** 不同协议类型用不同形状，增强可辨识度 */
 function shapeFor(kind: PacketKind): THREE.BufferGeometry {
   switch (kind) {
@@ -49,13 +60,10 @@ export function buildPacket(spec: PacketSpec): Packet {
   return { group: g, mesh, trail };
 }
 
-/** 漂浮的 JSON 文档面片：绘制实际 JSON 键值对（后端序列化结果的可视化） */
-export function buildJsonDoc(): THREE.Group {
-  const g = new THREE.Group();
-  const c = document.createElement('canvas');
-  c.width = 512;
-  c.height = 320;
+/** 在画布上绘制 JSON 键值对（后端序列化结果的可视化） */
+function drawJsonCanvas(c: HTMLCanvasElement): void {
   const ctx = c.getContext('2d')!;
+  ctx.clearRect(0, 0, c.width, c.height);
   ctx.fillStyle = 'rgba(15,22,42,0.95)';
   ctx.fillRect(0, 0, 512, 320);
   ctx.strokeStyle = '#2ecc71';
@@ -78,10 +86,25 @@ export function buildJsonDoc(): THREE.Group {
     ctx.fillStyle = '#9ce8b0';
     ctx.fillText(': ' + r[1], 130, 96 + i * 40);
   });
+}
+
+/** 漂浮的 JSON 文档面片 */
+export function buildJsonDoc(): JsonDoc {
+  const g = new THREE.Group();
+  const c = document.createElement('canvas');
+  c.width = 512;
+  c.height = 320;
+  drawJsonCanvas(c);
   const tex = new THREE.CanvasTexture(c);
   const mat = new THREE.MeshBasicMaterial({ map: tex, transparent: true });
   const plane = new THREE.Mesh(new THREE.PlaneGeometry(2.4, 1.5), mat);
   g.add(plane);
   g.visible = false;
-  return g;
+  return {
+    group: g,
+    redraw() {
+      drawJsonCanvas(c);
+      tex.needsUpdate = true;
+    }
+  };
 }

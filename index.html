@@ -10,7 +10,12 @@
 
 <div id="title">
   <h1>互联网数据传输 <span class="accent">· 3D 教学动画</span></h1>
-  <div class="sub">浏览器 → DNS / CDN / 负载均衡 → API → 后端 → 缓存 / 数据库 · JSON 数据格式</div>
+  <div class="sub">浏览器 → DNS / CDN / 负载均衡 → API → 后端 → 缓存 / 数据库</div>
+</div>
+
+<div id="scenarioBar">
+  <label for="scenario">场景</label>
+  <select id="scenario"></select>
 </div>
 
 <div id="steps">
@@ -21,16 +26,34 @@
   </div>
 </div>
 
-<div id="json">
-  <h2>JSON 响应数据 <span class="tag">application/json</span></h2>
-  <pre id="jsonCode"></pre>
-  <div class="legend">
-    <span><b class="j-key">"键"</b> 键名</span>
-    <span><b class="j-str">"字符串"</b></span>
-    <span><b class="j-num">数字</b></span>
-    <span><b class="j-bool">布尔</b></span>
-    <span><b class="j-null">null</b></span>
-    <span>{} 对象 · [] 数组</span>
+<div id="panel">
+  <div class="tabs">
+    <button class="tab active" data-tab="json">JSON</button>
+    <button class="tab" data-tab="code">代码</button>
+    <button class="tab" data-tab="net">网络</button>
+  </div>
+  <div class="tab-body" id="tab-json">
+    <h2>JSON 响应数据 <span class="tag">application/json</span></h2>
+    <div class="toolbar"><button id="btnEdit" class="mini">✏️ 编辑</button></div>
+    <pre id="jsonCode"></pre>
+    <textarea id="jsonEdit" spellcheck="false" style="display:none"></textarea>
+    <div class="legend">
+      <span><b class="j-key">"键"</b> 键名</span>
+      <span><b class="j-str">"字符串"</b></span>
+      <span><b class="j-num">数字</b></span>
+      <span><b class="j-bool">布尔</b></span>
+      <span><b class="j-null">null</b></span>
+      <span>{} 对象 · [] 数组</span>
+    </div>
+  </div>
+  <div class="tab-body" id="tab-code" hidden>
+    <h2>示例代码 <span class="tag">同步高亮</span></h2>
+    <pre id="codeView" class="codeview"></pre>
+  </div>
+  <div class="tab-body" id="tab-net" hidden>
+    <h2>网络请求 <span class="tag">DevTools</span></h2>
+    <div id="netRequest" class="net-req-line"></div>
+    <div id="netWaterfall" class="net-waterfall"></div>
   </div>
 </div>
 
@@ -43,7 +66,10 @@
   <label>速度 <input id="speed" type="range" min="0.2" max="3" step="0.1" value="1" /></label>
 </div>
 
-<div id="hint">🖱 拖拽旋转 · 滚轮缩放 · 右键平移</div>
+<div id="timeline">
+  <div id="tlTrack"></div>
+  <div id="tlPlayhead"></div>
+</div>
 
 <script type="module" src="/src/main.ts"></script>
 </body>
