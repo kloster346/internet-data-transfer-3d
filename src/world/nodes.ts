@@ -28,16 +28,16 @@ export interface Nodes {
   client: ClientNode;
 }
 
-/** 各节点的世界坐标（地面 y=0） */
+/** 各节点的世界坐标（地面 y=0）——前中后纵深 + 左右对称布局 */
 export const POS: Record<NodeId, [number, number, number]> = {
-  client: [-7.5, 0, 0],
-  dns: [-4.1, 0, 3.2],
-  cdn: [-2.6, 0, -3.2],
-  lb: [-1.1, 0, 0],
-  api: [2.2, 0, 0],
-  backend: [5.6, 0, 0],
-  cache: [7.4, 0, 2.0],
-  db: [7.4, 0, -2.0]
+  client: [0, 0, 7.2],
+  dns: [-5.2, 0, 3.0],
+  cdn: [5.2, 0, 3.0],
+  lb: [0, 0, 1.2],
+  api: [0, 0, -2.2],
+  backend: [0, 0, -5.5],
+  cache: [-3.8, 0, -4.8],
+  db: [3.8, 0, -4.8]
 };
 
 function steel(color: number): THREE.MeshStandardMaterial {
@@ -270,14 +270,14 @@ export function buildAllNodes(): Nodes {
 /** 为节点添加 CSS2D 文字标签 */
 export function addNodeLabels(scene: THREE.Scene): void {
   const defs: [NodeId, string, [number, number, number]][] = [
-    ['client', '前端（浏览器）', [-7.5, 3.8, 0]],
-    ['dns', 'DNS 解析器', [-4.1, 2.7, 3.2]],
-    ['cdn', 'CDN 边缘', [-2.6, 2.7, -3.2]],
-    ['lb', '负载均衡', [-1.1, 2.6, 0]],
-    ['api', 'API 网关', [2.2, 2.9, 0]],
-    ['backend', '后端（服务器）', [5.6, 3.4, 0]],
-    ['cache', '缓存', [7.4, 2.4, 2.0]],
-    ['db', '数据库', [7.4, 2.4, -2.0]]
+    ['client', '前端（浏览器）', [0, 3.9, 7.2]],
+    ['dns', 'DNS 解析器', [-5.2, 2.6, 3.0]],
+    ['cdn', 'CDN 边缘', [5.2, 2.6, 3.0]],
+    ['lb', '负载均衡', [0, 2.6, 1.2]],
+    ['api', 'API 网关', [0, 2.9, -2.2]],
+    ['backend', '后端（服务器）', [0, 3.5, -5.5]],
+    ['cache', '缓存', [-3.8, 2.5, -4.8]],
+    ['db', '数据库', [3.8, 2.5, -4.8]]
   ];
   for (const [id, text, p] of defs) {
     const l = label(text, 'small');

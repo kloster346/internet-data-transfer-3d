@@ -24,7 +24,6 @@ scene.fog = new THREE.Fog(0x070b16, 26, 70);
 const camera = createCamera();
 const renderers = createRenderers(container, scene, camera);
 const cameraRig = createCameraRig(camera, renderers.renderer.domElement);
-const { controls } = cameraRig;
 
 setupEnvironment(scene);
 buildBackdrop(scene);
@@ -56,16 +55,10 @@ scene.add(jsonDoc.group);
 // UI 门面：引擎只依赖最小接口，门面同时驱动 HUD 与右侧面板
 const hud = createHud();
 const panels = createPanels();
-let currentScenario: Scenario = SCENARIO;
 const ui = {
   setStep: (i: number): void => {
     hud.setStep(i);
     panels.setStep(i);
-    const activeId = currentScenario.steps[i]?.activate[0];
-    if (activeId) {
-      const np = nodes.list.get(activeId);
-      if (np) cameraRig.focusOn(np.group.position);
-    }
   },
   setPlaying: (p: boolean): void => hud.setPlaying(p),
   setScenario: (sc: Scenario): void => {
@@ -109,7 +102,6 @@ createInspector(camera, nodes, renderers.renderer.domElement);
 
 function switchScenario(id: string): void {
   const sc = getScenario(id);
-  currentScenario = sc;
   engine.setScenario(sc);
   timeline.setScenario(sc);
 }
@@ -135,7 +127,7 @@ function animate(): void {
   lastNow = now;
   engine.frame();
   timeline.update(engine.getCurrentTime(), engine.currentStep());
-  cameraRig.update(dt, now);
+  cameraRig.update(dt);
   renderers.render(scene, camera);
   renderers.labelRenderer.render(scene, camera);
 }

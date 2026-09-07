@@ -28,44 +28,24 @@ export function buildBackdrop(scene: THREE.Scene): void {
   rim.rotation.x = Math.PI / 2;
   scene.add(rim);
 
-  // 内圈细环（层次）
-  const inner = new THREE.Mesh(
-    new THREE.TorusGeometry(9.5, 0.03, 8, 80),
-    new THREE.MeshStandardMaterial({
-      color: 0x2a4a86,
-      emissive: 0x2a4a86,
-      emissiveIntensity: 0.6,
-      roughness: 0.4,
-      metalness: 0.3
-    })
-  );
-  inner.position.y = 0.06;
-  inner.rotation.x = Math.PI / 2;
-  scene.add(inner);
-
-  // 数据中心：平台后侧一圈服务器机柜（低模剪影，背向相机）
-  const rackMat = new THREE.MeshStandardMaterial({ color: 0x182647, roughness: 0.6, metalness: 0.4 });
-  const ledColors = [0x2ecc71, 0x4cc9f0, 0xffb703, 0xf72585, 0x9d4edd];
-  const rackCount = 16;
-  const r = 15.0;
-  for (let i = 0; i < rackCount; i++) {
-    // a ∈ [200°, 340°]，集中在后侧，避免遮挡默认相机
-    const a = (200 + (i / (rackCount - 1)) * 140) * (Math.PI / 180);
-    const x = Math.cos(a) * r;
-    const z = Math.sin(a) * r;
-    const rack = new THREE.Mesh(new THREE.BoxGeometry(1.35, 2.3, 0.85), rackMat);
-    rack.position.set(x, 1.15, z);
-    rack.rotation.y = -a + Math.PI / 2;
-    scene.add(rack);
-
-    const ledColor = ledColors[i % ledColors.length];
-    const led = new THREE.Mesh(
-      new THREE.BoxGeometry(1.1, 0.05, 0.05),
-      new THREE.MeshStandardMaterial({ color: ledColor, emissive: ledColor, emissiveIntensity: 1.4 })
+  // 同心圆环（电路感层次）
+  for (const [rad, w, col, it] of [
+    [5.5, 0.03, 0x2a4a86, 0.5],
+    [9.5, 0.025, 0x22386a, 0.4]
+  ] as const) {
+    const ring = new THREE.Mesh(
+      new THREE.TorusGeometry(rad, w, 8, 90),
+      new THREE.MeshStandardMaterial({
+        color: col,
+        emissive: col,
+        emissiveIntensity: it,
+        roughness: 0.4,
+        metalness: 0.3
+      })
     );
-    led.position.set(Math.cos(a) * (r - 0.52), 1.95, Math.sin(a) * (r - 0.52));
-    led.rotation.y = -a + Math.PI / 2;
-    scene.add(led);
+    ring.position.y = 0.06;
+    ring.rotation.x = Math.PI / 2;
+    scene.add(ring);
   }
 
   // 天空穹顶（上下渐变）
